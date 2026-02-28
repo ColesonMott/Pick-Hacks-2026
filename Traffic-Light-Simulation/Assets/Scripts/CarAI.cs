@@ -14,13 +14,18 @@ public class CarAI : MonoBehaviour
     public float detectionDistance = 12f;
     public float stopDistance = 5f;
 
+    [Header("Destination Settings")]
+    public float destinationSampleHeight = 10f;
+    public float destinationSampleRadius = 75f;
+
     private bool isStopped = false;
+    private Transform finalDestination;
+    private Vector3 snappedDestination;
 
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
 
-        // Proper NavMeshAgent setup
         agent.autoBraking = true;
         agent.updateRotation = true;
         agent.updatePosition = true;
@@ -34,21 +39,54 @@ public class CarAI : MonoBehaviour
         MoveToCurrentNode();
     }
 
-void Update()
-{
-    if (currentNode == null || agent == null)
-        return;
-
-    if (!agent.isOnNavMesh)
-        return;
-
-    HandleTraffic();
-
-    if (!agent.pathPending && agent.remainingDistance <= reachDistance)
+    void Update()
     {
-        AdvanceNode();
+        if (agent == null || !agent.isOnNavMesh)
+            return;
+
+        HandleTraffic();
+
+        if (!agent.pathPending && agent.remainingDistance <= reachDistance)
+        {
+            AdvanceNode();
+        }
     }
-}
+
+    // 🔥 FIXED DESTINATION ROUTING
+    public void SetBuildingDestination(Transform destination)
+    {
+        finalDestination = destination;
+
+        Vector3 searchPosition = destination.position + Vector3.up * destinationSampleHeight;
+
+        if (!NavMesh.SamplePosition(
+            searchPosition,
+            out NavMeshHit hit,
+            destinationSampleRadius,
+            NavMesh.AllAreas))
+        {
+            Debug.LogWarning("No NavMesh found near destination building: " + destination.name);
+            return;
+        }
+
+        snappedDestination = hit.position;
+
+        if (!agent.isOnNavMesh)
+            return;
+
+        // Validate path before committing
+        NavMeshPath testPath = new NavMeshPath();
+        agent.CalculatePath(snappedDestination, testPath);
+
+        if (testPath.status == NavMeshPathStatus.PathComplete)
+        {
+            agent.SetDestination(snappedDestination);
+        }
+        else
+        {
+            Debug.LogWarning("Invalid or partial path to building: " + destination.name);
+        }
+    }
 
     void MoveToCurrentNode()
     {
@@ -60,9 +98,11 @@ void Update()
 
     void AdvanceNode()
     {
+        if (currentNode == null)
+            return;
+
         if (currentNode.nodeType == LaneNode.NodeType.Start)
         {
-            // Move from Start → matching End on same lane
             LaneNode[] siblings = currentNode.transform.parent.GetComponentsInChildren<LaneNode>();
 
             foreach (LaneNode node in siblings)
@@ -81,9 +121,7 @@ void Update()
         if (currentNode.nodeType == LaneNode.NodeType.End)
         {
             if (currentNode.nextNodes.Count == 0)
-            {
-                return; // dead end, just stop
-            }
+                return;
 
             currentNode = currentNode.nextNodes[
                 Random.Range(0, currentNode.nextNodes.Count)
@@ -95,9 +133,6 @@ void Update()
 
     void HandleTraffic()
     {
-        if (!agent.isOnNavMesh)
-            return;
-
         Ray ray = new Ray(transform.position + Vector3.up * 0.5f, transform.forward);
         RaycastHit hit;
 

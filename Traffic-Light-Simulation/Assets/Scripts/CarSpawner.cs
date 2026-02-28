@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.AI;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -6,19 +7,21 @@ public class CarSpawner : MonoBehaviour
 {
     public GameObject carPrefab;
 
-    [Header("Spawn Points")]
-    public List<Transform> spawnPoints;
-
     [Header("Traffic Settings")]
     public int maxCars = 40;
     public float minSpawnTime = 0.5f;
     public float maxSpawnTime = 2f;
 
+    [Header("Spawn Settings")]
+    public float navMeshSearchRadius = 20f;
+    public float verticalSampleOffset = 5f;
+    public float spawnClearRadius = 2f;
+
     private int currentCars = 0;
 
     void Start()
     {
-        Debug.Log("NavMesh triangles: " + UnityEngine.AI.NavMesh.CalculateTriangulation().vertices.Length);
+        Debug.Log("NavMesh triangles: " + NavMesh.CalculateTriangulation().vertices.Length);
         StartCoroutine(SpawnLoop());
     }
 
@@ -35,68 +38,61 @@ public class CarSpawner : MonoBehaviour
 
 void SpawnCar()
 {
-    if (spawnPoints.Count == 0 || carPrefab == null)
+    if (BuildingManager.buildingEntrances.Count < 2)
         return;
 
-    Transform spawn = spawnPoints[
-        Random.Range(0, spawnPoints.Count)
+    Transform startBuilding = BuildingManager.buildingEntrances[
+        Random.Range(0, BuildingManager.buildingEntrances.Count)
     ];
 
-    Vector3 spawnPos = spawn.position;
+    Transform endBuilding = BuildingManager.buildingEntrances[
+        Random.Range(0, BuildingManager.buildingEntrances.Count)
+    ];
 
-    UnityEngine.AI.NavMeshHit hit;
+    if (startBuilding == endBuilding)
+        return;
 
-    // Force snap to NavMesh within 100 units
-    if (!UnityEngine.AI.NavMesh.SamplePosition(spawnPos, out hit, 100f, UnityEngine.AI.NavMesh.AllAreas))
+    // 🔥 KEY FIX: Sample from ABOVE building
+    Vector3 searchPosition = startBuilding.position + Vector3.up * 10f;
+
+    if (!UnityEngine.AI.NavMesh.SamplePosition(
+        searchPosition,
+        out UnityEngine.AI.NavMeshHit hit,
+        50f,                         // large radius
+        UnityEngine.AI.NavMesh.AllAreas))
     {
-        Debug.LogWarning("No NavMesh found near spawn.");
+        Debug.LogWarning("No NavMesh found near building " + startBuilding.name);
         return;
     }
 
-    spawnPos = hit.position;
+    // Prevent overlapping cars
+    Collider[] overlaps = Physics.OverlapSphere(hit.position, 2f);
+    foreach (Collider col in overlaps)
+    {
+        if (col.GetComponent<CarAI>() != null)
+            return;
+    }
 
-    GameObject car = Instantiate(
-        carPrefab,
-        spawnPos,
-        spawn.rotation
-    );
+    // 🔥 SAFE INSTANTIATE
+    GameObject car = Instantiate(carPrefab);
 
     UnityEngine.AI.NavMeshAgent agent = car.GetComponent<UnityEngine.AI.NavMeshAgent>();
 
+    agent.enabled = false;
+    car.transform.position = hit.position + Vector3.up * 0.1f;
+    agent.enabled = true;
+
     if (!agent.isOnNavMesh)
     {
-        agent.Warp(spawnPos);
+        Destroy(car);
+        return;
     }
 
     CarAI ai = car.GetComponent<CarAI>();
-    ai.Initialize(FindNearestStartNode(spawnPos), this);
+    ai.SetBuildingDestination(endBuilding);
 
     currentCars++;
 }
-
-    LaneNode FindNearestStartNode(Vector3 position)
-    {
-        LaneNode[] nodes = FindObjectsOfType<LaneNode>();
-
-        float closest = Mathf.Infinity;
-        LaneNode best = null;
-
-        foreach (LaneNode node in nodes)
-        {
-            if (node.nodeType != LaneNode.NodeType.Start)
-                continue;
-
-            float dist = Vector3.Distance(position, node.transform.position);
-
-            if (dist < closest)
-            {
-                closest = dist;
-                best = node;
-            }
-        }
-
-        return best;
-    }
 
     public void NotifyCarDestroyed()
     {
