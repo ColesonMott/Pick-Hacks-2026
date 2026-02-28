@@ -51,24 +51,6 @@ public class ComplicatedTrafficController : MonoBehaviour
         StartNormalCycle();
     }
 
-    private void Update()
-    {
-        // Manual testing keys
-        if (Input.GetKeyDown(KeyCode.N))
-            ActivateEmergency("North");
-
-        if (Input.GetKeyDown(KeyCode.S))
-            ActivateEmergency("South");
-
-        if (Input.GetKeyDown(KeyCode.E))
-            ActivateEmergency("East");
-
-        if (Input.GetKeyDown(KeyCode.W))
-            ActivateEmergency("West");
-
-        if (Input.GetKeyDown(KeyCode.R))
-            ResumeNormal();
-    }
 
     #endregion
 
