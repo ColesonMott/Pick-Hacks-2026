@@ -2,10 +2,13 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+#region DATA CLASSES
+
 [System.Serializable]
 public class TrafficSignal
 {
-    public string Name;                 // e.g., "North Straight" or "North Left"
+    public string Name;   // e.g. "North Straight", "East Left"
+
     public MeshRenderer redLight;
     public MeshRenderer yellowLight;
     public MeshRenderer greenLight;
@@ -14,39 +17,69 @@ public class TrafficSignal
 [System.Serializable]
 public class TrafficPhase
 {
-    public string PhaseName;            // e.g., "North-South Phase"
-    public List<TrafficSignal> Signals; // Signals active in this phase
-    public float greenTime = 10f;       // Duration green stays on
-    public float yellowTime = 3f;       // Duration yellow stays on
+    public string PhaseName;
+
+    public List<TrafficSignal> Signals = new List<TrafficSignal>();
+
+    public float greenTime = 10f;
+    public float yellowTime = 3f;
 }
+
+#endregion
 
 public class ComplicatedTrafficController : MonoBehaviour
 {
+    private Coroutine normalCycle;
+    private bool isEmergencyActive = false;
+
     [Header("Materials")]
-    public Material lightsOnMat;        // Bright material for "on"
-    public Material lightsOffMat;       // Dark material for "off"
+    public Material lightsOnMat;
+    public Material lightsOffMat;
 
     [Header("Phases")]
     public List<TrafficPhase> Phases = new List<TrafficPhase>();
 
+    #region UNITY LIFECYCLE
+
     private void Awake()
     {
-        // Initialize all signals in all phases to red
-        foreach (var phase in Phases)
-        {
-            foreach (var signal in phase.Signals)
-            {
-                if (signal.redLight != null) signal.redLight.material = lightsOnMat;
-                if (signal.yellowLight != null) signal.yellowLight.material = lightsOffMat;
-                if (signal.greenLight != null) signal.greenLight.material = lightsOffMat;
-            }
-        }
+        SetAllRed();
     }
 
     private void Start()
     {
-        if (Phases.Count > 0)
-            StartCoroutine(RunPhases());
+        StartNormalCycle();
+    }
+
+    private void Update()
+    {
+        // Manual testing keys
+        if (Input.GetKeyDown(KeyCode.N))
+            ActivateEmergency("North");
+
+        if (Input.GetKeyDown(KeyCode.S))
+            ActivateEmergency("South");
+
+        if (Input.GetKeyDown(KeyCode.E))
+            ActivateEmergency("East");
+
+        if (Input.GetKeyDown(KeyCode.W))
+            ActivateEmergency("West");
+
+        if (Input.GetKeyDown(KeyCode.R))
+            ResumeNormal();
+    }
+
+    #endregion
+
+    #region NORMAL CYCLE
+
+    private void StartNormalCycle()
+    {
+        if (normalCycle != null)
+            StopCoroutine(normalCycle);
+
+        normalCycle = StartCoroutine(RunPhases());
     }
 
     private IEnumerator RunPhases()
@@ -55,44 +88,111 @@ public class ComplicatedTrafficController : MonoBehaviour
         {
             foreach (TrafficPhase phase in Phases)
             {
-                // --- GREEN for this phase ---
-                SetPhaseLights(phase, "Green");
+                // GREEN
+                SetPhaseState(phase, LightState.Green);
                 yield return new WaitForSeconds(phase.greenTime);
 
-                // --- YELLOW for this phase ---
-                SetPhaseLights(phase, "Yellow");
+                // YELLOW
+                SetPhaseState(phase, LightState.Yellow);
                 yield return new WaitForSeconds(phase.yellowTime);
 
-                // --- RED for this phase ---
-                SetPhaseLights(phase, "Red");
-
-                // Optional short buffer before next phase
+                // RED
+                SetPhaseState(phase, LightState.Red);
                 yield return new WaitForSeconds(0.5f);
             }
         }
     }
 
-    private void SetPhaseLights(TrafficPhase phase, string state)
+    #endregion
+
+    #region EMERGENCY MODE
+
+    public void ActivateEmergency(string direction)
     {
-        foreach (var signal in phase.Signals)
+        if (isEmergencyActive) return;
+
+        isEmergencyActive = true;
+
+        if (normalCycle != null)
+            StopCoroutine(normalCycle);
+
+        SetAllRed();
+        SetDirectionGreen(direction);
+    }
+
+    public void ResumeNormal()
+    {
+        if (!isEmergencyActive) return;
+
+        isEmergencyActive = false;
+        StartNormalCycle();
+    }
+
+    #endregion
+
+    #region LIGHT CONTROL
+
+    private enum LightState
+    {
+        Red,
+        Yellow,
+        Green
+    }
+
+    private void SetPhaseState(TrafficPhase phase, LightState state)
+    {
+        foreach (TrafficSignal signal in phase.Signals)
         {
-            if (signal.redLight != null)
-                signal.redLight.material = (state == "Red") ? lightsOnMat : lightsOffMat;
-            if (signal.yellowLight != null)
-                signal.yellowLight.material = (state == "Yellow") ? lightsOnMat : lightsOffMat;
-            if (signal.greenLight != null)
-                signal.greenLight.material = (state == "Green") ? lightsOnMat : lightsOffMat;
+            SetSignalState(signal, state);
         }
     }
 
-    // Optional: manually control a single signal outside the phase loop
-    public void SetSingleSignal(TrafficSignal signal, string state)
+    private void SetSignalState(TrafficSignal signal, LightState state)
     {
         if (signal.redLight != null)
-            signal.redLight.material = (state == "Red") ? lightsOnMat : lightsOffMat;
+            signal.redLight.material = (state == LightState.Red) ? lightsOnMat : lightsOffMat;
+
         if (signal.yellowLight != null)
-            signal.yellowLight.material = (state == "Yellow") ? lightsOnMat : lightsOffMat;
+            signal.yellowLight.material = (state == LightState.Yellow) ? lightsOnMat : lightsOffMat;
+
         if (signal.greenLight != null)
-            signal.greenLight.material = (state == "Green") ? lightsOnMat : lightsOffMat;
+            signal.greenLight.material = (state == LightState.Green) ? lightsOnMat : lightsOffMat;
     }
+
+    private void SetAllRed()
+    {
+        HashSet<TrafficSignal> processedSignals = new HashSet<TrafficSignal>();
+
+        foreach (TrafficPhase phase in Phases)
+        {
+            foreach (TrafficSignal signal in phase.Signals)
+            {
+                if (!processedSignals.Contains(signal))
+                {
+                    SetSignalState(signal, LightState.Red);
+                    processedSignals.Add(signal);
+                }
+            }
+        }
+    }
+
+    private void SetDirectionGreen(string direction)
+    {
+        HashSet<TrafficSignal> processedSignals = new HashSet<TrafficSignal>();
+
+        foreach (TrafficPhase phase in Phases)
+        {
+            foreach (TrafficSignal signal in phase.Signals)
+            {
+                if (!processedSignals.Contains(signal) &&
+                    signal.Name.ToLower().Contains(direction.ToLower()))
+                {
+                    SetSignalState(signal, LightState.Green);
+                    processedSignals.Add(signal);
+                }
+            }
+        }
+    }
+
+    #endregion
 }
