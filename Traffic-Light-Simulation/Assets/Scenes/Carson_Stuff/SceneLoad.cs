@@ -5,6 +5,6 @@ public class SceneLoad : MonoBehaviour
 {
     public void LoadIntersection()
     {
-        SceneManager.LoadScene("1");
+        SceneManager.LoadScene("Intersection");
     }
 }
