@@ -2,10 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-<<<<<<< HEAD
 #region DATA CLASSES
-=======
->>>>>>> main
 
 [System.Serializable]
 public class TrafficSignal
@@ -33,10 +30,7 @@ public class TrafficPhase
 public class ComplicatedTrafficController : MonoBehaviour
 {
     private Coroutine normalCycle;
-<<<<<<< HEAD
     private bool isEmergencyActive = false;
-=======
->>>>>>> main
 
     [Header("Materials")]
     public Material lightsOnMat;
@@ -54,7 +48,6 @@ public class ComplicatedTrafficController : MonoBehaviour
 
     private void Start()
     {
-<<<<<<< HEAD
         StartNormalCycle();
     }
 
@@ -87,35 +80,6 @@ public class ComplicatedTrafficController : MonoBehaviour
             StopCoroutine(normalCycle);
 
         normalCycle = StartCoroutine(RunPhases());
-=======
-        normalCycle = StartCoroutine(RunPhases());
-    }
-
-    void Update()
-    {
-        
-        // Example: Press 'E' for emergency mode, 'R' to resume normal
-        if (Input.GetKeyDown(KeyCode.N))
-        {
-            ActivateEmergency("North");
-        }
-        else if (Input.GetKeyDown(KeyCode.S))
-        {
-            ActivateEmergency("South");
-        }
-        else if (Input.GetKeyDown(KeyCode.E))
-        {
-            ActivateEmergency("East");
-        }
-        else if (Input.GetKeyDown(KeyCode.W))
-        {
-            ActivateEmergency("West");
-        }
-        else if (Input.GetKeyDown(KeyCode.R))
-        {
-            ResumeNormal();
-        }
->>>>>>> main
     }
 
     private IEnumerator RunPhases()
@@ -195,7 +159,6 @@ public class ComplicatedTrafficController : MonoBehaviour
             signal.greenLight.material = (state == LightState.Green) ? lightsOnMat : lightsOffMat;
     }
 
-<<<<<<< HEAD
     private void SetAllRed()
     {
         HashSet<TrafficSignal> processedSignals = new HashSet<TrafficSignal>();
@@ -209,43 +172,10 @@ public class ComplicatedTrafficController : MonoBehaviour
                     SetSignalState(signal, LightState.Red);
                     processedSignals.Add(signal);
                 }
-=======
-    public void ActivateEmergency(string direction)
-    {
-        if (normalCycle != null)
-            StopCoroutine(normalCycle);
-
-        SetAllRed();
-
-        // You implement which signals turn green based on direction
-        SetDirectionGreen(direction);
-    }
-
-    public void ResumeNormal()
-    {
-        normalCycle = StartCoroutine(RunPhases());
-    }
-
-    void SetAllRed()
-    {
-        foreach (var phase in Phases)
-        {
-            foreach (var signal in phase.Signals)
-            {
-                if (signal.redLight != null)
-                    signal.redLight.material = lightsOnMat;
-
-                if (signal.yellowLight != null)
-                    signal.yellowLight.material = lightsOffMat;
-
-                if (signal.greenLight != null)
-                    signal.greenLight.material = lightsOffMat;
->>>>>>> main
             }
         }
     }
 
-<<<<<<< HEAD
     private void SetDirectionGreen(string direction)
     {
         HashSet<TrafficSignal> processedSignals = new HashSet<TrafficSignal>();
@@ -259,32 +189,10 @@ public class ComplicatedTrafficController : MonoBehaviour
                 {
                     SetSignalState(signal, LightState.Green);
                     processedSignals.Add(signal);
-=======
-    void SetDirectionGreen(string direction)
-    {
-        foreach (var phase in Phases)
-        {
-            foreach (var signal in phase.Signals)
-            {
-                if (signal.Name.Contains(direction))
-                {
-                    // GREEN for matching direction
-                    if (signal.redLight != null)
-                        signal.redLight.material = lightsOffMat;
-
-                    if (signal.yellowLight != null)
-                        signal.yellowLight.material = lightsOffMat;
-
-                    if (signal.greenLight != null)
-                        signal.greenLight.material = lightsOnMat;
->>>>>>> main
                 }
             }
         }
     }
-<<<<<<< HEAD
 
     #endregion
-=======
->>>>>>> main
 }
