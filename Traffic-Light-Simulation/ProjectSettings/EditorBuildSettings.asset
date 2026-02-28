@@ -4,5 +4,8 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/Carson_Stuff/Start Scene.unity
+    guid: 2b8082e3c7a3c2d48ac7d86c49ef68b8
   m_configObjects: {}
