@@ -3,14 +3,11 @@ using UnityEngine.AI;
 
 public class CarAI : MonoBehaviour
 {
-    private NavMeshAgent agent;
     private CarSpawner spawner;
-
     private LaneNode currentNode;
+    private NavMeshAgent agent;
 
     [Header("Driving")]
-    public float driveSpeed = 8f;
-    public float turnSpeed = 6f;
     public float reachDistance = 1.5f;
 
     [Header("Traffic")]
@@ -23,88 +20,84 @@ public class CarAI : MonoBehaviour
     {
         agent = GetComponent<NavMeshAgent>();
 
-        if (agent != null)
-        {
-            agent.updatePosition = false;
-            agent.updateRotation = false;
-        }
+        // Proper NavMeshAgent setup
+        agent.autoBraking = true;
+        agent.updateRotation = true;
+        agent.updatePosition = true;
     }
 
     public void Initialize(LaneNode startNode, CarSpawner ownerSpawner)
     {
         spawner = ownerSpawner;
+        currentNode = startNode;
 
-        if (startNode == null)
-            return;
+        MoveToCurrentNode();
+    }
 
-        // Immediately move to the first next node
-        if (startNode.nextNodes.Count > 0)
+void Update()
+{
+    if (currentNode == null || agent == null)
+        return;
+
+    if (!agent.isOnNavMesh)
+        return;
+
+    HandleTraffic();
+
+    if (!agent.pathPending && agent.remainingDistance <= reachDistance)
+    {
+        AdvanceNode();
+    }
+}
+
+    void MoveToCurrentNode()
+    {
+        if (currentNode != null && agent.isOnNavMesh)
         {
-            currentNode = startNode.nextNodes[
-                Random.Range(0, startNode.nextNodes.Count)
-            ];
-        }
-        else
-        {
-            // If no connections exist, destroy safely
-            Destroy(gameObject);
+            agent.SetDestination(currentNode.transform.position);
         }
     }
 
-    void Update()
+    void AdvanceNode()
     {
-        if (currentNode == null)
+        if (currentNode.nodeType == LaneNode.NodeType.Start)
+        {
+            // Move from Start → matching End on same lane
+            LaneNode[] siblings = currentNode.transform.parent.GetComponentsInChildren<LaneNode>();
+
+            foreach (LaneNode node in siblings)
+            {
+                if (node.nodeType == LaneNode.NodeType.End)
+                {
+                    currentNode = node;
+                    MoveToCurrentNode();
+                    return;
+                }
+            }
+
             return;
+        }
 
-        HandleTraffic();
-
-        if (!isStopped)
-            Drive();
-    }
-
-    void Drive()
-    {
-        Vector3 target = currentNode.transform.position;
-        Vector3 dir = target - transform.position;
-        dir.y = 0f;
-
-        float distance = dir.magnitude;
-
-        if (distance < reachDistance)
+        if (currentNode.nodeType == LaneNode.NodeType.End)
         {
             if (currentNode.nextNodes.Count == 0)
             {
-                // if (spawner != null)
-                //     spawner.NotifyCarDestroyed();
-
-                // Destroy(gameObject);
-                return;
+                return; // dead end, just stop
             }
 
             currentNode = currentNode.nextNodes[
                 Random.Range(0, currentNode.nextNodes.Count)
             ];
 
-            return;
-        }
-
-        dir.Normalize();
-
-        transform.position += dir * driveSpeed * Time.deltaTime;
-
-        if (dir.sqrMagnitude > 0.001f)
-        {
-            Quaternion rot = Quaternion.LookRotation(dir);
-            transform.rotation = Quaternion.Slerp(
-                transform.rotation,
-                rot,
-                Time.deltaTime * turnSpeed
-            );
+            MoveToCurrentNode();
         }
     }
 
     void HandleTraffic()
     {
+        if (!agent.isOnNavMesh)
+            return;
+
         Ray ray = new Ray(transform.position + Vector3.up * 0.5f, transform.forward);
         RaycastHit hit;
 
@@ -112,11 +105,16 @@ public class CarAI : MonoBehaviour
         {
             if (hit.collider.CompareTag("Car") && hit.distance < stopDistance)
             {
+                agent.isStopped = true;
                 isStopped = true;
                 return;
             }
         }
 
-        isStopped = false;
+        if (isStopped)
+        {
+            agent.isStopped = false;
+            isStopped = false;
+        }
     }
 }

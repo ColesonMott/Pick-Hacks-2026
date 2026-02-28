@@ -120,9 +120,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ff8f1e8a9ce60ec47ad366019eec8522, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  reachDistance: 2
   detectionDistance: 5
   stopDistance: 4
-  resumeDistance: 6
 --- !u!195 &960308402865219692
 NavMeshAgent:
   m_ObjectHideFlags: 0
