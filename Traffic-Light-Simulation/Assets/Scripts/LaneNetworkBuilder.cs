@@ -39,7 +39,7 @@ public class LaneNetworkBuilder : MonoBehaviour
             float forwardDot = Vector3.Dot(endNode.transform.forward, toStart.normalized);
 
             // Must be roughly in front
-            if (forwardDot < 0.8f)
+            if (forwardDot < 0.3f)
                 continue;
 
             float forwardDistance = Vector3.Dot(endNode.transform.forward, toStart);
