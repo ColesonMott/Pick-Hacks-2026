@@ -8,4 +8,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Carson_Stuff/Start Scene.unity
     guid: 2b8082e3c7a3c2d48ac7d86c49ef68b8
+  - enabled: 1
+    path: Assets/Scenes/Intersection.unity
+    guid: 78eb7ffb8c4066641bc7524631441c5a
   m_configObjects: {}
