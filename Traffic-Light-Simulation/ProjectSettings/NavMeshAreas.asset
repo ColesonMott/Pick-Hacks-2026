@@ -17,9 +17,9 @@ NavMeshProjectSettings:
     cost: 1
   - name: Blocked_Turn
     cost: 1
-  - name: 
+  - name: Lane_1
     cost: 1
-  - name: 
+  - name: Lane_2
     cost: 1
   - name: 
     cost: 1

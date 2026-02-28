@@ -14,9 +14,10 @@ GameObject:
   - component: {fileID: 3153067588738795043}
   - component: {fileID: -2490061202914873352}
   - component: {fileID: 960308402865219692}
-  m_Layer: 0
+  - component: {fileID: -4421262310019572773}
+  m_Layer: 7
   m_Name: Car
-  m_TagString: Untagged
+  m_TagString: Car
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -119,6 +120,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ff8f1e8a9ce60ec47ad366019eec8522, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  detectionDistance: 5
+  stopDistance: 4
+  resumeDistance: 6
 --- !u!195 &960308402865219692
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -128,12 +132,12 @@ NavMeshAgent:
   m_GameObject: {fileID: 1967502750443342470}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.5
+  m_Radius: 0.35
   m_Speed: 8
-  m_Acceleration: 12
+  m_Acceleration: 6
   avoidancePriority: 50
-  m_AngularSpeed: 120
-  m_StoppingDistance: 0.5
+  m_AngularSpeed: 80
+  m_StoppingDistance: 2.5
   m_AutoTraverseOffMeshLink: 1
   m_AutoBraking: 1
   m_AutoRepath: 1
@@ -141,3 +145,16 @@ NavMeshAgent:
   m_BaseOffset: 0.5
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
+--- !u!114 &-4421262310019572773
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1967502750443342470}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bf9ef68a507b67499b46e473d8ad67b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  steeringSmoothness: 6
