@@ -92,7 +92,7 @@ void SpawnCar()
     ai.SetBuildingDestination(endBuilding);
 
     currentCars++;
-}   
+}
 
     public void NotifyCarDestroyed()
     {
