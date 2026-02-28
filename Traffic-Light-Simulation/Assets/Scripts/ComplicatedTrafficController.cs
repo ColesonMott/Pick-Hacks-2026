@@ -22,6 +22,8 @@ public class TrafficPhase
 
 public class ComplicatedTrafficController : MonoBehaviour
 {
+    private Coroutine normalCycle;
+
     [Header("Materials")]
     public Material lightsOnMat;        // Bright material for "on"
     public Material lightsOffMat;       // Dark material for "off"
@@ -45,8 +47,33 @@ public class ComplicatedTrafficController : MonoBehaviour
 
     private void Start()
     {
-        if (Phases.Count > 0)
-            StartCoroutine(RunPhases());
+        normalCycle = StartCoroutine(RunPhases());
+    }
+
+    void Update()
+    {
+        
+        // Example: Press 'E' for emergency mode, 'R' to resume normal
+        if (Input.GetKeyDown(KeyCode.N))
+        {
+            ActivateEmergency("North");
+        }
+        else if (Input.GetKeyDown(KeyCode.S))
+        {
+            ActivateEmergency("South");
+        }
+        else if (Input.GetKeyDown(KeyCode.E))
+        {
+            ActivateEmergency("East");
+        }
+        else if (Input.GetKeyDown(KeyCode.W))
+        {
+            ActivateEmergency("West");
+        }
+        else if (Input.GetKeyDown(KeyCode.R))
+        {
+            ResumeNormal();
+        }
     }
 
     private IEnumerator RunPhases()
@@ -94,5 +121,61 @@ public class ComplicatedTrafficController : MonoBehaviour
             signal.yellowLight.material = (state == "Yellow") ? lightsOnMat : lightsOffMat;
         if (signal.greenLight != null)
             signal.greenLight.material = (state == "Green") ? lightsOnMat : lightsOffMat;
+    }
+
+    public void ActivateEmergency(string direction)
+    {
+        if (normalCycle != null)
+            StopCoroutine(normalCycle);
+
+        SetAllRed();
+
+        // You implement which signals turn green based on direction
+        SetDirectionGreen(direction);
+    }
+
+    public void ResumeNormal()
+    {
+        normalCycle = StartCoroutine(RunPhases());
+    }
+
+    void SetAllRed()
+    {
+        foreach (var phase in Phases)
+        {
+            foreach (var signal in phase.Signals)
+            {
+                if (signal.redLight != null)
+                    signal.redLight.material = lightsOnMat;
+
+                if (signal.yellowLight != null)
+                    signal.yellowLight.material = lightsOffMat;
+
+                if (signal.greenLight != null)
+                    signal.greenLight.material = lightsOffMat;
+            }
+        }
+    }
+
+    void SetDirectionGreen(string direction)
+    {
+        foreach (var phase in Phases)
+        {
+            foreach (var signal in phase.Signals)
+            {
+                if (signal.Name.Contains(direction))
+                {
+                    // GREEN for matching direction
+                    if (signal.redLight != null)
+                        signal.redLight.material = lightsOffMat;
+
+                    if (signal.yellowLight != null)
+                        signal.yellowLight.material = lightsOffMat;
+
+                    if (signal.greenLight != null)
+                        signal.greenLight.material = lightsOnMat;
+                }
+            }
+        }
     }
 }
