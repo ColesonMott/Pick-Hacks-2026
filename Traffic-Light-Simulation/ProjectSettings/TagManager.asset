@@ -4,20 +4,20 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - CinemachineTarget
+  - Car
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - NonWalkable
   - Water
   - UI
   - Road
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Car
+  - FirstTurnConditions
+  - SecondTurnConditions
+  - ThirdTurnConditions
+  - FourthTurnConditions
   - 
   - 
   - 
