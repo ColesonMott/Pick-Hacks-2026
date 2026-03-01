@@ -1,103 +1,76 @@
 using UnityEngine;
-using UnityEngine.AI;
-using System.Collections;
 using System.Collections.Generic;
 
 public class CarSpawner : MonoBehaviour
 {
-    public GameObject carPrefab;
+    [Header("Car Settings")]
+    public CarAI carPrefab;
+    public int initialCarCount = 10;
+    public float laneOffsetAmount = 1.5f; // half lane width
 
-    [Header("Traffic Settings")]
-    public int maxCars = 40;
-    public float minSpawnTime = 0.5f;
-    public float maxSpawnTime = 2f;
+    [Header("Lane Nodes")]
+    public List<LaneNode> allLaneNodes = new List<LaneNode>();
 
-    [Header("Spawn Settings")]
-    public float navMeshSearchRadius = 20f;
-    public float verticalSampleOffset = 5f;
-    public float spawnClearRadius = 2f;
+    private List<LaneNode> startNodes = new List<LaneNode>();
 
-    private int currentCars = 0;
-
-    void Start()
+    void Awake()
     {
-        Debug.Log("NavMesh triangles: " + NavMesh.CalculateTriangulation().vertices.Length);
-        StartCoroutine(SpawnLoop());
-    }
+        // Automatically find all LaneNodes in the scene
+        allLaneNodes.Clear();
+        allLaneNodes.AddRange(FindObjectsOfType<LaneNode>());
 
-    IEnumerator SpawnLoop()
-    {
-        while (true)
+        // Filter only Start nodes
+        startNodes.Clear();
+        foreach (var node in allLaneNodes)
         {
-            if (currentCars < maxCars)
-                SpawnCar();
+            if (node.nodeType == LaneNode.NodeType.Start)
+            {
+                // Calculate laneIndex automatically from position
+                node.CalculateLaneIndex();
+                startNodes.Add(node);
+            }
+        }
 
-            yield return new WaitForSeconds(Random.Range(minSpawnTime, maxSpawnTime));
+        Debug.Log("Start nodes found: " + startNodes.Count);
+
+        // Spawn initial cars
+        for (int i = 0; i < initialCarCount; i++)
+        {
+            SpawnCar();
         }
     }
 
-void SpawnCar()
-{
-    if (BuildingManager.buildingEntrances.Count < 2)
-        return;
-
-    Transform startBuilding = BuildingManager.buildingEntrances[
-        Random.Range(0, BuildingManager.buildingEntrances.Count)
-    ];
-
-    Transform endBuilding = BuildingManager.buildingEntrances[
-        Random.Range(0, BuildingManager.buildingEntrances.Count)
-    ];
-
-    if (startBuilding == endBuilding)
-        return;
-
-    // 🔥 KEY FIX: Sample from ABOVE building
-    Vector3 searchPosition = startBuilding.position + Vector3.up * 10f;
-
-    if (!UnityEngine.AI.NavMesh.SamplePosition(
-        searchPosition,
-        out UnityEngine.AI.NavMeshHit hit,
-        50f,                         // large radius
-        UnityEngine.AI.NavMesh.AllAreas))
+    public void SpawnCar()
     {
-        Debug.LogWarning("No NavMesh found near building " + startBuilding.name);
-        return;
-    }
-
-    // Prevent overlapping cars
-    Collider[] overlaps = Physics.OverlapSphere(hit.position, 2f);
-    foreach (Collider col in overlaps)
-    {
-        if (col.GetComponent<CarAI>() != null)
+        if (startNodes.Count == 0)
+        {
+            Debug.LogWarning("No Start nodes found!");
             return;
-    }
+        }
 
-    // 🔥 SAFE INSTANTIATE
-    GameObject car = Instantiate(carPrefab);
+        LaneNode startNode = startNodes[Random.Range(0, startNodes.Count)];
 
-    UnityEngine.AI.NavMeshAgent agent = car.GetComponent<UnityEngine.AI.NavMeshAgent>();
+        // Spawn position slightly above ground
+        Vector3 spawnPos = startNode.transform.position + Vector3.up * 0.5f;
 
-    agent.enabled = false;
-    car.transform.position = hit.position + Vector3.up * 0.1f;
-    agent.enabled = true;
+        // Apply lane offset
+        Vector3 offset = startNode.transform.right * laneOffsetAmount * startNode.laneIndex;
+        spawnPos += offset;
 
-    if (!agent.isOnNavMesh)
-    {
-        Destroy(car);
-        return;
-    }
+        // Instantiate the car
+        CarAI car = Instantiate(carPrefab, spawnPos, Quaternion.identity);
 
-    CarAI ai = car.GetComponent<CarAI>();
-    ai.SetBuildingDestination(endBuilding);
+        // Make car face the next node or road
+        Vector3 forward = (startNode.nextNodes.Count > 0)
+            ? (startNode.nextNodes[0].transform.position - startNode.transform.position).normalized
+            : startNode.transform.forward;
 
-    currentCars++;
-}   
+        // Apply rotation offset if model is not Z+ forward
+        Quaternion rotationOffset = Quaternion.Euler(0, 90f, 0); // adjust if needed
+        if (forward != Vector3.zero)
+            car.transform.rotation = Quaternion.LookRotation(forward, Vector3.up) * rotationOffset;
 
-    public void NotifyCarDestroyed()
-    {
-        currentCars--;
-        if (currentCars < 0)
-            currentCars = 0;
+        // Initialize CarAI with start node
+        car.Initialize(startNode);
     }
 }

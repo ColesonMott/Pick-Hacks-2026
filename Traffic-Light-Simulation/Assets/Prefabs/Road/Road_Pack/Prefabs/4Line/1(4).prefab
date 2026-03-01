@@ -17,12 +17,12 @@ GameObject:
   - component: {fileID: 2948568427542795238}
   - component: {fileID: 7038692281743275117}
   - component: {fileID: 92174498788670061}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: 1(4)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &1582996915591644879
 Transform:
@@ -32,13 +32,15 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2214715358144715893}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 992818460979420209}
   - {fileID: 5586470518125508106}
+  - {fileID: 998065046140816721}
+  - {fileID: 5053255965965521804}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &2474786112664373610
@@ -193,6 +195,59 @@ MonoBehaviour:
   m_Center: {x: -0.01578331, y: 1, z: 3.6687536}
   m_Area: 7
   m_AffectedAgents: ffffffff
+--- !u!1 &2456733409212910307
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 998065046140816721}
+  - component: {fileID: 1363062877115738406}
+  m_Layer: 0
+  m_Name: Middle_Lane_N
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &998065046140816721
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2456733409212910307}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.03, y: 0.961, z: 3.58}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1582996915591644879}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &1363062877115738406
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2456733409212910307}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 20.011536, y: 1, z: 0.51709914}
+  m_Center: {x: 0.04820632, y: 0, z: -0.044727284}
 --- !u!1 &2995909911316318622
 GameObject:
   m_ObjectHideFlags: 0
@@ -204,12 +259,12 @@ GameObject:
   - component: {fileID: 1525763972920879174}
   - component: {fileID: 2923683974043651884}
   - component: {fileID: 8267713157484677257}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: LaneA_End
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &1525763972920879174
 Transform:
@@ -272,12 +327,12 @@ GameObject:
   - component: {fileID: 2965854850983752914}
   - component: {fileID: 5862551827358191843}
   - component: {fileID: 7544105108818682263}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: LaneB_Start
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &2965854850983752914
 Transform:
@@ -338,12 +393,12 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5586470518125508106}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Lane2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &5586470518125508106
 Transform:
@@ -375,12 +430,12 @@ GameObject:
   - component: {fileID: 7273206560976577364}
   - component: {fileID: 4494482177689233468}
   - component: {fileID: 4096637488458425796}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: LaneA_Start
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &7273206560976577364
 Transform:
@@ -432,6 +487,59 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &5443920675501251009
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5053255965965521804}
+  - component: {fileID: 3807007746781565994}
+  m_Layer: 0
+  m_Name: Middle_Lane_S
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5053255965965521804
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5443920675501251009}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.03, y: 0.961, z: -3.48}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1582996915591644879}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &3807007746781565994
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5443920675501251009}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 20.011536, y: 1, z: 0.51709914}
+  m_Center: {x: 0.04820632, y: 0, z: -0.044727284}
 --- !u!1 &5621640688490639414
 GameObject:
   m_ObjectHideFlags: 0
@@ -441,12 +549,12 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 992818460979420209}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Lane1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &992818460979420209
 Transform:
@@ -478,12 +586,12 @@ GameObject:
   - component: {fileID: 8702976556389163991}
   - component: {fileID: 1613489140177745823}
   - component: {fileID: 882191621586966413}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: LaneB_Start
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &8702976556389163991
 Transform:
@@ -546,12 +654,12 @@ GameObject:
   - component: {fileID: 5843181712683927214}
   - component: {fileID: 3409226414375605894}
   - component: {fileID: 3535763811561777994}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: LaneA_End
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &5843181712683927214
 Transform:
@@ -614,12 +722,12 @@ GameObject:
   - component: {fileID: 7548264807415945645}
   - component: {fileID: 6655555806323483367}
   - component: {fileID: 4852950765947340087}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: LaneA_Start
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &7548264807415945645
 Transform:
@@ -682,12 +790,12 @@ GameObject:
   - component: {fileID: 7166419713929069856}
   - component: {fileID: 7440471423776363409}
   - component: {fileID: 6072509920225154319}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: 'LaneB_End '
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &7166419713929069856
 Transform:
@@ -750,12 +858,12 @@ GameObject:
   - component: {fileID: 5725359763990502258}
   - component: {fileID: 2424780724215719426}
   - component: {fileID: 840606356381113221}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: 'LaneB_End '
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &5725359763990502258
 Transform:
