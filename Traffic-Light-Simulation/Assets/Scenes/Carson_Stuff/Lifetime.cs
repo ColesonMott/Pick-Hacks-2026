@@ -6,7 +6,7 @@ public class VehicleLifetime : MonoBehaviour
 
     void Update()
     {
-        // Scales with Time.timeScale (your sim speed)
+        // scales with Time.timeScale
         SimSeconds += Time.deltaTime;
     }
 }

@@ -4,7 +4,6 @@ public class HoverHighlight : MonoBehaviour
 {
     Renderer[] rends;
 
-    [Header("Highlight")]
     public Color highlightColor = Color.yellow;
     public float emissionStrength = 2f;
 
@@ -13,13 +12,12 @@ public class HoverHighlight : MonoBehaviour
         rends = GetComponentsInChildren<Renderer>();
     }
 
-    public void SetHighlight(bool state)
+    public void SetHighlight(bool on)
     {
-        for (int i = 0; i < rends.Length; i++)
+        foreach (var r in rends)
         {
-            var mat = rends[i].material;
-
-            if (state)
+            var mat = r.material;
+            if (on)
             {
                 mat.EnableKeyword("_EMISSION");
                 mat.SetColor("_EmissionColor", highlightColor * emissionStrength);
