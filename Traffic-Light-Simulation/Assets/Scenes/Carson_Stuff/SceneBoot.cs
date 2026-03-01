@@ -3,20 +3,26 @@ using UnityEngine;
 public class StartCameraSwitcher : MonoBehaviour
 {
     public Camera startCamera;
-    public Camera mainCamera; // your MainCamera
+    public Camera mainCamera;
+
+    public GameObject startMenuUI; // ⭐ your button/menu
 
     void Start()
     {
-        // Start on intro camera
         startCamera.enabled = true;
         mainCamera.enabled = false;
     }
 
-    // ⭐ THIS is what the button will call
+    // Called by the button
     public void StartGame()
     {
+        // Switch cameras
         startCamera.enabled = false;
         mainCamera.enabled = true;
+
+        // ⭐ Hide the UI
+        if (startMenuUI != null)
+            startMenuUI.SetActive(false);
 
         // Optional: fix audio listener warning
         AudioListener startAL = startCamera.GetComponent<AudioListener>();
