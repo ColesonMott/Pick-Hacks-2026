@@ -1,135 +1,64 @@
 using UnityEngine;
 using UnityEngine.AI;
-using System.Collections.Generic;
 
 public class AmbulanceAI : MonoBehaviour
 {
     private NavMeshAgent agent;
 
-    [Header("Route Settings")]
-    public Transform baseLocation;
-    public List<Transform> possibleDestinations = new List<Transform>();
-
-    [Header("Emergency Settings")]
     public float activationDistance = 30f;
-
-    private Transform currentTarget;
-    private bool returningToBase = false;
-
-    private HashSet<TrafficIntersection> triggeredIntersections =
-        new HashSet<TrafficIntersection>();
+    private TrafficIntersection activeIntersection;
 
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
-
-        if (agent == null)
-        {
-            Debug.LogError("No NavMeshAgent found!");
-            return;
-        }
-
-        agent.autoBraking = true;
-        agent.speed = 12f;           // force consistent speed
-        agent.acceleration = 20f;
-        agent.angularSpeed = 120f;
-        agent.stoppingDistance = 1f;
-        agent.avoidancePriority = 0; // highest priority
-    }
-
-    void Start()
-    {
-        if (!agent.isOnNavMesh)
-        {
-            Debug.LogError("Ambulance is not on NavMesh!");
-            return;
-        }
-
-        GoToRandomDestination();
+        agent.autoBraking = false;
+        agent.speed *= 1.5f;
     }
 
     void Update()
     {
-        if (!agent.isOnNavMesh || agent.pathPending)
-            return;
-
-        CheckUpcomingIntersections();
-
-        // If reached target
-        if (agent.remainingDistance <= agent.stoppingDistance)
+        if (agent.hasPath)
         {
-            if (returningToBase)
-            {
-                returningToBase = false;
-                GoToRandomDestination();
-            }
-            else
-            {
-                GoToBase();
-            }
+            CheckUpcomingIntersections();
         }
-    }
-
-    void GoToRandomDestination()
-    {
-        if (possibleDestinations.Count == 0)
-        {
-            Debug.LogWarning("No destinations assigned!");
-            return;
-        }
-
-        int index = Random.Range(0, possibleDestinations.Count);
-        currentTarget = possibleDestinations[index];
-
-        agent.SetDestination(currentTarget.position);
-    }
-
-    void GoToBase()
-    {
-        if (baseLocation == null)
-        {
-            Debug.LogWarning("Base location not assigned!");
-            return;
-        }
-
-        returningToBase = true;
-        agent.SetDestination(baseLocation.position);
     }
 
     void CheckUpcomingIntersections()
     {
-        foreach (TrafficIntersection intersection in TrafficIntersection.AllIntersections)
+        Vector3[] corners = agent.path.corners;
+
+        foreach (Vector3 corner in corners)
         {
-            if (triggeredIntersections.Contains(intersection))
-                continue;
-
-            float distance = Vector3.Distance(transform.position, intersection.transform.position);
-
-            if (distance < activationDistance)
+            foreach (TrafficIntersection intersection in TrafficIntersection.AllIntersections)
             {
-                string direction = GetTravelDirection(intersection.transform.position);
-                intersection.ActivateEmergency(direction);
+                float distance = Vector3.Distance(corner, intersection.transform.position);
 
-                triggeredIntersections.Add(intersection);
-                StartCoroutine(ResumeAfterDelay(intersection, 6f));
+                if (distance < activationDistance)
+                {
+                    if (activeIntersection != intersection)
+                    {
+                        if (activeIntersection != null)
+                            activeIntersection.ResumeNormal();
+
+                        activeIntersection = intersection;
+
+                        string direction = GetTravelDirection();
+                        activeIntersection.ActivateEmergency(direction);
+                    }
+
+                    return;
+                }
             }
         }
     }
 
-    string GetTravelDirection(Vector3 intersectionPos)
+    string GetTravelDirection()
     {
-        Vector3 dir = (intersectionPos - transform.position).normalized;
+        Vector3 velocity = agent.velocity;
 
-        if (Mathf.Abs(dir.z) > Mathf.Abs(dir.x))
-            return dir.z > 0 ? "North" : "South";
+        if (Mathf.Abs(velocity.z) > Mathf.Abs(velocity.x))
+            return velocity.z > 0 ? "North" : "South";
         else
-            return dir.x > 0 ? "East" : "West";
-    }
-
-    System.Collections.IEnumerator ResumeAfterDelay(TrafficIntersection intersection, float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        intersection.ResumeNormal();
-        triggeredIntersections.Remove(intersection);
+            return velocity.x > 0 ? "East" : "West";
     }
 }
