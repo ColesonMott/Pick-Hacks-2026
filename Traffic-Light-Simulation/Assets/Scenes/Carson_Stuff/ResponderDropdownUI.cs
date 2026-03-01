@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -8,6 +9,8 @@ public class ResponderDropdownUI : MonoBehaviour
 
     // Keeps the same order as dropdown options
     private readonly List<FirstResponderVehicle> units = new();
+
+    Coroutine bindRoutine;
 
     void Awake()
     {
@@ -21,28 +24,52 @@ public class ResponderDropdownUI : MonoBehaviour
 
         dropdown.onValueChanged.AddListener(OnDropdownChanged);
 
-        // Subscribe to registry events if available
-        if (ResponderRegistry.Instance != null)
-        {
-            ResponderRegistry.Instance.OnAdded += HandleChanged;
-            ResponderRegistry.Instance.OnRemoved += HandleChanged;
-            ResponderRegistry.Instance.OnChanged += HandleChanged;
-        }
-
-        RebuildOptions();
+        // Bind when registry is ready (fixes script execution order issues)
+        bindRoutine = StartCoroutine(BindWhenReady());
     }
 
     void OnDisable()
     {
+        if (bindRoutine != null) StopCoroutine(bindRoutine);
+
         if (dropdown != null)
             dropdown.onValueChanged.RemoveListener(OnDropdownChanged);
 
-        if (ResponderRegistry.Instance != null)
-        {
-            ResponderRegistry.Instance.OnAdded -= HandleChanged;
-            ResponderRegistry.Instance.OnRemoved -= HandleChanged;
-            ResponderRegistry.Instance.OnChanged -= HandleChanged;
-        }
+        Unsubscribe();
+    }
+
+    IEnumerator BindWhenReady()
+    {
+        // Wait until ResponderRegistry exists
+        while (ResponderRegistry.Instance == null)
+            yield return null;
+
+        Subscribe();
+
+        // Wait one more frame so any FindObjectsOfType/Register calls finish
+        yield return null;
+
+        RebuildOptions();
+    }
+
+    void Subscribe()
+    {
+        var reg = ResponderRegistry.Instance;
+        if (reg == null) return;
+
+        reg.OnAdded += HandleChanged;
+        reg.OnRemoved += HandleChanged;
+        reg.OnChanged += HandleChanged;
+    }
+
+    void Unsubscribe()
+    {
+        var reg = ResponderRegistry.Instance;
+        if (reg == null) return;
+
+        reg.OnAdded -= HandleChanged;
+        reg.OnRemoved -= HandleChanged;
+        reg.OnChanged -= HandleChanged;
     }
 
     void HandleChanged(FirstResponderVehicle _)
@@ -57,7 +84,6 @@ public class ResponderDropdownUI : MonoBehaviour
         dropdown.ClearOptions();
         units.Clear();
 
-        // Option 0 = “none”
         var options = new List<string> { "Select unit..." };
         units.Add(null);
 
@@ -67,7 +93,6 @@ public class ResponderDropdownUI : MonoBehaviour
             foreach (var u in reg.Responders)
             {
                 if (u == null) continue;
-
                 options.Add($"{u.displayName} ({u.type})");
                 units.Add(u);
             }
@@ -75,7 +100,6 @@ public class ResponderDropdownUI : MonoBehaviour
 
         dropdown.AddOptions(options);
 
-        // Reset selection to the placeholder
         dropdown.SetValueWithoutNotify(0);
         dropdown.RefreshShownValue();
     }
@@ -87,9 +111,6 @@ public class ResponderDropdownUI : MonoBehaviour
         var unit = units[index];
         if (unit == null) return;
 
-        // Focus camera on the unit (choose ONE of these approaches)
-
-        // Preferred (clean):
         if (SelectionService.Instance != null)
             SelectionService.Instance.Select(unit);
         else

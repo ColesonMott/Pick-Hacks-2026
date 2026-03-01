@@ -18,6 +18,9 @@ public class ResponderRegistry : MonoBehaviour
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
+
+        foreach (var v in FindObjectsOfType<FirstResponderVehicle>())
+            Register(v);
     }
 
     public void Register(FirstResponderVehicle v)
