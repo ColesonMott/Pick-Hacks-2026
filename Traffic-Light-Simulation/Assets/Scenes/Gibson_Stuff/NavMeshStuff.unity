@@ -42247,11 +42247,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3834004ee93469045a53ebf9cf868c68, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  carPrefab: {fileID: 1967502750443342470, guid: 92aee8f2246702c459b4ef83c2da594c, type: 3}
+  carPrefab: {fileID: 675249978529913273, guid: dc7e42c54e09b47d08aea086ad6d973b, type: 3}
   maxCars: 30
   minSpawnTime: 0.5
   maxSpawnTime: 2
-  spawnRadius: 80
   spawnClearRadius: 2
 --- !u!4 &734430588
 Transform:
@@ -124800,11 +124799,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   isEmergencyVehicle: 1
   reachDistance: 3
+  destroyDistance: 2
+  rotationSpeed: 8
   detectionDistance: 8
   stopDistance: 3
+  rayHeight: 1.5
+  useSphereCast: 1
+  sphereCastRadius: 0.5
+  trafficLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   roadLayer:
     serializedVersion: 2
     m_Bits: 64
+  logDestinationDebug: 0
 --- !u!1001 &2009510708
 PrefabInstance:
   m_ObjectHideFlags: 0
