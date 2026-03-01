@@ -51,10 +51,6 @@ public class ComplicatedTrafficController : MonoBehaviour
         StartNormalCycle();
     }
 
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
-=======
     private void Update()
     {
         // Manual testing keys
@@ -73,9 +69,7 @@ public class ComplicatedTrafficController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.R))
             ResumeNormal();
     }
->>>>>>> parent of 6236cd0 (Fixed All my stuff. The cars go to buildings now and then stop.)
 
->>>>>>> Stashed changes
     #endregion
 
     #region NORMAL CYCLE
@@ -148,9 +142,7 @@ public class ComplicatedTrafficController : MonoBehaviour
     private void SetPhaseState(TrafficPhase phase, LightState state)
     {
         foreach (TrafficSignal signal in phase.Signals)
-        {
             SetSignalState(signal, state);
-        }
     }
 
     private void SetSignalState(TrafficSignal signal, LightState state)
@@ -191,6 +183,7 @@ public class ComplicatedTrafficController : MonoBehaviour
             foreach (TrafficSignal signal in phase.Signals)
             {
                 if (!processedSignals.Contains(signal) &&
+                    signal.Name != null &&
                     signal.Name.ToLower().Contains(direction.ToLower()))
                 {
                     SetSignalState(signal, LightState.Green);
