@@ -1,40 +1,47 @@
-using UnityEngine;
+"using UnityEngine;
 using UnityEngine.AI;
 
 public class CarAI : MonoBehaviour
 {
+    [Header(""Vehicle Type"")]
+    public bool isEmergencyVehicle = false;
+
     private NavMeshAgent agent;
     private Transform targetBuilding;
     private CarSpawner spawner;
 
-    [Header("Driving")]
-    [Tooltip("How close to the target building before considering it reached")]
+    [Header(""Driving"")]
+    [Tooltip(""How close to the target building before considering it reached (for picking next destination)"")]
     public float reachDistance = 3f;
 
-    [Tooltip("How close to the target before we despawn the car (and notify spawner)")]
+    [Tooltip(""How close to the target before we despawn the car (and notify spawner)"")]
     public float destroyDistance = 2f;
 
-    [Tooltip("How fast the car visually turns to match its movement direction")]
+    [Tooltip(""How fast the car visually turns to match its movement direction"")]
     public float rotationSpeed = 8f;
 
-    [Header("Traffic Detection")]
-    [Tooltip("How far ahead we look for traffic lights / cars")]
+    [Header(""Traffic Detection"")]
+    [Tooltip(""How far ahead we look for traffic lights / cars"")]
     public float detectionDistance = 8f;
 
-    [Tooltip("Distance at which we actually stop for an obstacle")]
+    [Tooltip(""Distance at which we actually stop for an obstacle"")]
     public float stopDistance = 3f;
 
-    [Tooltip("Height above the car's position where the ray/sphere starts")]
+    [Tooltip(""Height above the car's position where the ray/sphere starts"")]
     public float rayHeight = 1.5f;
 
-    [Tooltip("Use a sphere cast instead of a thin ray (recommended for small cars)")]
+    [Tooltip(""Use a sphere cast instead of a thin ray (recommended for small cars)"")]
     public bool useSphereCast = true;
 
-    [Tooltip("Radius of the sphere cast when useSphereCast is true")]
+    [Tooltip(""Radius of the sphere cast when useSphereCast is true"")]
     public float sphereCastRadius = 0.5f;
 
-    [Tooltip("Layers that count as traffic (cars, stop-line colliders, etc.)")]
+    [Tooltip(""Layers that count as traffic (cars, stop-line colliders, etc.)"")]
     public LayerMask trafficLayerMask = ~0;
+
+    [Header(""Road Detection"")]
+    [Tooltip(""Layers used to detect roads for closure checks"")]
+    public LayerMask roadLayer;
 
     // Debug / state
     private bool stoppedByCar = false;
@@ -65,29 +72,30 @@ public class CarAI : MonoBehaviour
         if (agent == null || !agent.enabled)
             return;
 
+        // 1) Handle traffic lights and cars
         HandleTraffic();
+
+        // 2) Debug visuals
         DrawDebugRay();
 
-        // Don’t touch path info if we’re not on a NavMesh yet
+        // 3) Road closures & re-routing
+        CheckRoadClosure();
+
+        // 4) If not on a NavMesh, don't touch nav properties
         if (!agent.isOnNavMesh)
             return;
 
-        // If we're allowed to move and have a target, handle reaching logic
-        if (!agent.isStopped && targetBuilding != null)
+        // 5) Building reach logic (keep roaming between buildings)
+        if (!agent.isStopped && targetBuilding != null && !agent.pathPending && agent.hasPath)
         {
-            // Only query remainingDistance if we actually have a path
-            if (!agent.pathPending && agent.hasPath)
+            float dist = agent.remainingDistance;
+            if (!float.IsInfinity(dist) && dist <= reachDistance)
             {
-                float dist = agent.remainingDistance;
-
-                if (!float.IsInfinity(dist) && dist <= reachDistance)
-                {
-                    PickRandomBuildingDestination();
-                }
+                PickRandomBuildingDestination();
             }
         }
 
-        // Now do rotation + optional despawn check
+        // 6) Rotation & despawn check
         UpdateRotation();
         TryDestroyWhenArrived();
     }
@@ -101,16 +109,29 @@ public class CarAI : MonoBehaviour
     {
         targetBuilding = building;
 
-        if (agent != null && targetBuilding != null)
+        if (agent == null || building == null)
+            return;
+
+        agent.isStopped = false;
+
+        if (agent.isOnNavMesh)
         {
-            agent.isStopped = false;
             agent.SetDestination(targetBuilding.position);
+        }
+        else
+        {
+            // Try to snap onto NavMesh if somehow off it
+            if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit, 10f, NavMesh.AllAreas))
+            {
+                agent.Warp(hit.position);
+                if (agent.isOnNavMesh)
+                    agent.SetDestination(targetBuilding.position);
+            }
         }
     }
 
     /// <summary>
     /// After reaching a building, pick a new random target from BuildingManager.
-    /// You can remove this if you prefer one-trip cars.
     /// </summary>
     private void PickRandomBuildingDestination()
     {
@@ -152,13 +173,13 @@ public class CarAI : MonoBehaviour
         if (agent == null || targetBuilding == null)
             return;
 
-        if (agent.pathPending)
+        if (agent.pathPending || !agent.isOnNavMesh || !agent.hasPath)
             return;
 
         // Close enough to the target?
         if (agent.remainingDistance <= destroyDistance)
         {
-            // "Stopped" in a practical sense: very low velocity
+            // ""Stopped"" in a practical sense: very low velocity
             if (agent.velocity.sqrMagnitude < 0.01f)
             {
                 // Notify spawner and destroy this car
@@ -174,7 +195,86 @@ public class CarAI : MonoBehaviour
 
     #endregion
 
-    #region TRAFFIC HANDLING
+    #region ROAD CLOSURE & INTERSECTIONS
+
+    private void CheckRoadClosure()
+    {
+        if (RoadClosureManager.Instance == null || isEmergencyVehicle)
+            return;
+
+        Ray ray = new Ray(transform.position + Vector3.up * 0.5f, transform.forward);
+
+        if (Physics.Raycast(ray, out RaycastHit hit, 10f, roadLayer, QueryTriggerInteraction.Ignore))
+        {
+            if (RoadClosureManager.Instance.IsRoadClosed(hit.collider))
+            {
+                // Drop current path and re-route
+                agent.ResetPath();
+                ChooseTurnTowardTarget();
+            }
+        }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (!other.CompareTag(""Intersection""))
+            return;
+
+        ChooseTurnTowardTarget();
+    }
+
+    private void ChooseTurnTowardTarget()
+    {
+        if (agent == null || targetBuilding == null)
+            return;
+
+        Vector3 toTarget = (targetBuilding.position - transform.position).normalized;
+
+        Vector3 forward = transform.forward;
+        Vector3 left = Quaternion.Euler(0, -90f, 0) * forward;
+        Vector3 right = Quaternion.Euler(0, 90f, 0) * forward;
+
+        Vector3[] options = { forward, left, right };
+
+        float bestScore = -999f;
+        Vector3 bestDirection = forward;
+
+        foreach (var dir in options)
+        {
+            if (!IsValidDirection(dir))
+                continue;
+
+            float score = Vector3.Dot(dir.normalized, toTarget);
+
+            if (score > bestScore)
+            {
+                bestScore = score;
+                bestDirection = dir;
+            }
+        }
+
+        Vector3 probe = transform.position + bestDirection.normalized * 40f;
+
+        if (NavMesh.SamplePosition(probe, out NavMeshHit hit, 20f, NavMesh.AllAreas))
+        {
+            agent.SetDestination(hit.position);
+        }
+    }
+
+    private bool IsValidDirection(Vector3 direction)
+    {
+        float dot = Vector3.Dot(transform.forward, direction.normalized);
+
+        // Block reverse or extreme side angle
+        if (dot < 0.2f)
+            return false;
+
+        return true;
+    }
+
+    #endregion
+
+    #region TRAFFIC (LIGHTS + CARS)
 
     private void HandleTraffic()
     {
@@ -232,7 +332,7 @@ public class CarAI : MonoBehaviour
             }
 
             // 2) If the light doesn't block us, check for a car
-            if (!shouldStop && hit.collider.CompareTag("Car") && distance < stopDistance)
+            if (!shouldStop && hit.collider.CompareTag(""Car"") && distance < stopDistance)
             {
                 shouldStop = true;
                 stoppedByCar = true;
@@ -324,4 +424,4 @@ public class CarAI : MonoBehaviour
     }
 
     #endregion
-}
+}"
