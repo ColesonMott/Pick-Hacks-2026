@@ -51,6 +51,24 @@ public class ComplicatedTrafficController : MonoBehaviour
         StartNormalCycle();
     }
 
+    private void Update()
+    {
+        // Manual testing keys
+        if (Input.GetKeyDown(KeyCode.N))
+            ActivateEmergency("North");
+
+        if (Input.GetKeyDown(KeyCode.S))
+            ActivateEmergency("South");
+
+        if (Input.GetKeyDown(KeyCode.E))
+            ActivateEmergency("East");
+
+        if (Input.GetKeyDown(KeyCode.W))
+            ActivateEmergency("West");
+
+        if (Input.GetKeyDown(KeyCode.R))
+            ResumeNormal();
+    }
 
     #endregion
 
@@ -124,9 +142,7 @@ public class ComplicatedTrafficController : MonoBehaviour
     private void SetPhaseState(TrafficPhase phase, LightState state)
     {
         foreach (TrafficSignal signal in phase.Signals)
-        {
             SetSignalState(signal, state);
-        }
     }
 
     private void SetSignalState(TrafficSignal signal, LightState state)
@@ -167,6 +183,7 @@ public class ComplicatedTrafficController : MonoBehaviour
             foreach (TrafficSignal signal in phase.Signals)
             {
                 if (!processedSignals.Contains(signal) &&
+                    signal.Name != null &&
                     signal.Name.ToLower().Contains(direction.ToLower()))
                 {
                     SetSignalState(signal, LightState.Green);
