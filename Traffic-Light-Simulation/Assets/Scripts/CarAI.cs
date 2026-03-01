@@ -313,18 +313,20 @@ private float lastMoveTime;
         ChooseTurnTowardTarget();
     }
 
-    private void ChooseTurnTowardTarget()
-    {
-        if (agent == null)
-            return;
+private void ChooseTurnTowardTarget()
+{
+    if (agent == null || !agent.enabled || !agent.isOnNavMesh)
+        return;
 
-        // If we somehow lost our target building, try to pick one.
+    if (targetBuilding == null)
+    {
+        EnsureHasDestination();
         if (targetBuilding == null)
-        {
-            EnsureHasDestination();
-            if (targetBuilding == null)
-                return;
-        }
+            return;
+    }
+
+    // rest of your logic...
+
 
         Vector3 toTarget = (targetBuilding.position - transform.position).normalized;
 
