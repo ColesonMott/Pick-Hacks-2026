@@ -51,31 +51,6 @@ public class ComplicatedTrafficController : MonoBehaviour
         StartNormalCycle();
     }
 
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
-=======
-    private void Update()
-    {
-        // Manual testing keys
-        if (Input.GetKeyDown(KeyCode.N))
-            ActivateEmergency("North");
-
-        if (Input.GetKeyDown(KeyCode.S))
-            ActivateEmergency("South");
-
-        if (Input.GetKeyDown(KeyCode.E))
-            ActivateEmergency("East");
-
-        if (Input.GetKeyDown(KeyCode.W))
-            ActivateEmergency("West");
-
-        if (Input.GetKeyDown(KeyCode.R))
-            ResumeNormal();
-    }
->>>>>>> parent of 6236cd0 (Fixed All my stuff. The cars go to buildings now and then stop.)
-
->>>>>>> Stashed changes
     #endregion
 
     #region NORMAL CYCLE
