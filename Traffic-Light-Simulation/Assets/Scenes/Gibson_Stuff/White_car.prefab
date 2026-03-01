@@ -11,6 +11,8 @@ GameObject:
   - component: {fileID: 8119250796408119335}
   - component: {fileID: 1465044160393814660}
   - component: {fileID: 7055941087748762164}
+  - component: {fileID: -542597166921661402}
+  - component: {fileID: -8602986449258889178}
   m_Layer: 0
   m_Name: White_car
   m_TagString: Car
@@ -42,7 +44,7 @@ NavMeshAgent:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 675249978529913273}
   m_Enabled: 1
-  m_AgentTypeID: -334000983
+  m_AgentTypeID: 0
   m_Radius: 0.5
   m_Speed: 3.5
   m_Acceleration: 8
@@ -68,10 +70,61 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ff8f1e8a9ce60ec47ad366019eec8522, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isEmergencyVehicle: 0
   reachDistance: 2
-  laneOffsetAmount: 1.5
   detectionDistance: 5
   stopDistance: 4
+  roadLayer:
+    serializedVersion: 2
+    m_Bits: 64
+--- !u!65 &-542597166921661402
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 675249978529913273}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!54 &-8602986449258889178
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 675249978529913273}
+  serializedVersion: 4
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1001 &6583895877715687301
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -12,7 +12,6 @@ public class CarSpawner : MonoBehaviour
     public float maxSpawnTime = 2f;
 
     [Header("Spawn Settings")]
-    public float spawnRadius = 80f;
     public float spawnClearRadius = 3f;
 
     private int currentCars = 0;
@@ -34,59 +33,80 @@ public class CarSpawner : MonoBehaviour
         }
     }
 
-void SpawnCar()
-{
-    if (BuildingManager.buildingEntrances.Count < 2)
-        return;
-
-    Transform startBuilding = BuildingManager.buildingEntrances[
-        Random.Range(0, BuildingManager.buildingEntrances.Count)
-    ];
-
-    Transform endBuilding = BuildingManager.buildingEntrances[
-        Random.Range(0, BuildingManager.buildingEntrances.Count)
-    ];
-
-    if (startBuilding == endBuilding)
-        return;
-
-    Vector3 searchPosition = startBuilding.position + Vector3.up * 5f;
-
-    if (!NavMesh.SamplePosition(searchPosition, out NavMeshHit hit, 25f, NavMesh.AllAreas))
+    void SpawnCar()
     {
-        Debug.LogWarning("No NavMesh found near building: " + startBuilding.name);
-        return;
+        if (BuildingManager.buildingEntrances.Count < 2)
+            return;
+
+        Transform startBuilding = BuildingManager.buildingEntrances[
+            Random.Range(0, BuildingManager.buildingEntrances.Count)
+        ];
+
+        Transform endBuilding = BuildingManager.buildingEntrances[
+            Random.Range(0, BuildingManager.buildingEntrances.Count)
+        ];
+
+        if (startBuilding == endBuilding)
+            return;
+
+        Vector3 searchPosition = startBuilding.position + Vector3.up * 5f;
+
+        if (!NavMesh.SamplePosition(searchPosition, out NavMeshHit hit, 25f, NavMesh.AllAreas))
+        {
+            Debug.LogWarning("No NavMesh found near building: " + startBuilding.name);
+            return;
+        }
+
+        // Prevent overlapping spawns
+        Collider[] overlaps = Physics.OverlapSphere(hit.position, spawnClearRadius);
+        foreach (Collider col in overlaps)
+        {
+            if (col.GetComponent<CarAI>() != null)
+                return;
+        }
+
+        GameObject car = Instantiate(carPrefab);
+        NavMeshAgent agent = car.GetComponent<NavMeshAgent>();
+
+        // Disable agent before moving
+        agent.enabled = false;
+
+        car.transform.position = hit.position;
+
+        // Determine correct forward direction from road
+        Vector3 laneForward = FindLaneForward(hit.position);
+        car.transform.rotation = Quaternion.LookRotation(laneForward, Vector3.up);
+
+        agent.enabled = true;
+        agent.Warp(hit.position);
+
+        if (!agent.isOnNavMesh)
+        {
+            Destroy(car);
+            return;
+        }
+
+        CarAI ai = car.GetComponent<CarAI>();
+        ai.SetBuildingDestination(endBuilding);
+
+        currentCars++;
     }
 
-    GameObject car = Instantiate(carPrefab);
-
-    NavMeshAgent agent = car.GetComponent<NavMeshAgent>();
-
-    // Disable BEFORE moving
-    agent.enabled = false;
-
-    // Snap EXACTLY to NavMesh
-    car.transform.position = hit.position;
-
-    // Enable AFTER placement
-    agent.enabled = true;
-
-    // NOW warp to guarantee binding
-    agent.Warp(hit.position);
-
-    if (!agent.isOnNavMesh)
+    // 🔥 Finds nearest road direction to align spawn properly
+    Vector3 FindLaneForward(Vector3 position)
     {
-        Debug.LogWarning("Agent failed to bind to NavMesh.");
-        Destroy(car);
-        return;
+        Ray ray = new Ray(position + Vector3.up * 2f, Vector3.down);
+
+        if (Physics.Raycast(ray, out RaycastHit hit, 10f))
+        {
+            Transform road = hit.collider.transform;
+
+            // Use road forward if aligned prefab
+            return road.forward.normalized;
+        }
+
+        return Vector3.forward; // fallback
     }
-
-    CarAI ai = car.GetComponent<CarAI>();
-
-    ai.SetBuildingDestination(endBuilding);
-    
-    currentCars++;
-}
 
     public void NotifyCarDestroyed()
     {
