@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 4707833494937535959}
   m_Layer: 0
   m_Name: Ambulance
-  m_TagString: Untagged
+  m_TagString: Car
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -43,8 +43,8 @@ NavMeshAgent:
   m_GameObject: {fileID: 4858917271281749744}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.5
-  m_Speed: 3.5
+  m_Radius: 0.2
+  m_Speed: 12
   m_Acceleration: 8
   avoidancePriority: 50
   m_AngularSpeed: 120
@@ -71,7 +71,19 @@ MonoBehaviour:
   baseLocation: {fileID: 0}
   possibleDestinations:
   - {fileID: 0}
+  reachDistance: 3
+  rotationSpeed: 8
+  detectionDistance: 8
+  stopDistance: 3
+  rayHeight: 3
+  useSphereCast: 1
+  sphereCastRadius: 0.7
+  trafficLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   activationDistance: 50
+  emergencyHoldTime: 5
+  logDebug: 0
 --- !u!1001 &4094392589434368543
 PrefabInstance:
   m_ObjectHideFlags: 0

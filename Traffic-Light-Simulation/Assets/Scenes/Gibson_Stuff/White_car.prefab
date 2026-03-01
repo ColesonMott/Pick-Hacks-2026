@@ -12,8 +12,7 @@ GameObject:
   - component: {fileID: 1465044160393814660}
   - component: {fileID: 7055941087748762164}
   - component: {fileID: 7620553283782928337}
-  - component: {fileID: 4026418304389518895}
-  - component: {fileID: 5833035317394555728}
+  - component: {fileID: 4977781774104315038}
   m_Layer: 0
   m_Name: White_car
   m_TagString: Car
@@ -100,34 +99,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   steeringSmoothness: 6
---- !u!54 &4026418304389518895
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 675249978529913273}
-  serializedVersion: 4
-  m_Mass: 1
-  m_Drag: 0
-  m_AngularDrag: 0.05
-  m_CenterOfMass: {x: 0, y: 0, z: 0}
-  m_InertiaTensor: {x: 1, y: 1, z: 1}
-  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ImplicitCom: 1
-  m_ImplicitTensor: 1
-  m_UseGravity: 0
-  m_IsKinematic: 1
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 0
---- !u!65 &5833035317394555728
+--- !u!65 &4977781774104315038
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -146,8 +118,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 3.931768, z: 1}
-  m_Center: {x: 0, y: 2.151808, z: 0}
+  m_Size: {x: 1, y: 1.4673991, z: 3.001438}
+  m_Center: {x: 0, y: 0.837857, z: 1.0007204}
 --- !u!1001 &6583895877715687301
 PrefabInstance:
   m_ObjectHideFlags: 0
