@@ -1,50 +1,46 @@
-"using UnityEngine;
+using UnityEngine;
 using UnityEngine.AI;
 
 public class CarAI : MonoBehaviour
 {
-    public bool isEmergencyVehicle = false;
-    [Header(""Vehicle Type"")]
+    [Header("Vehicle Type")]
     public bool isEmergencyVehicle = false;
 
     private NavMeshAgent agent;
     private Transform targetBuilding;
     private CarSpawner spawner;
 
-    [Header(""Driving"")]
-    [Tooltip(""How close to the target building before considering it reached (for picking next destination)"")]
+    [Header("Driving")]
+    [Tooltip("How close to the target building before considering it reached (for picking next destination)")]
     public float reachDistance = 3f;
 
-    [Tooltip(""How close to the target before we despawn the car (and notify spawner)"")]
+    [Tooltip("How close to the target before we despawn the car (and notify spawner)")]
     public float destroyDistance = 2f;
 
-    [Tooltip(""How fast the car visually turns to match its movement direction"")]
+    [Tooltip("How fast the car visually turns to match its movement direction")]
     public float rotationSpeed = 8f;
 
-    [Header(""Traffic Detection"")]
-    [Tooltip(""How far ahead we look for traffic lights / cars"")]
+    [Header("Traffic Detection")]
+    [Tooltip("How far ahead we look for traffic lights / cars")]
     public float detectionDistance = 8f;
 
-    [Tooltip(""Distance at which we actually stop for an obstacle"")]
+    [Tooltip("Distance at which we actually stop for an obstacle")]
     public float stopDistance = 3f;
 
-    private bool stopped = false;
-    [Header("Road Detection")]
-public LayerMask roadLayer;
-    [Tooltip(""Height above the car's position where the ray/sphere starts"")]
+    [Tooltip("Height above the car's position where the ray/sphere starts")]
     public float rayHeight = 1.5f;
 
-    [Tooltip(""Use a sphere cast instead of a thin ray (recommended for small cars)"")]
+    [Tooltip("Use a sphere cast instead of a thin ray (recommended for small cars)")]
     public bool useSphereCast = true;
 
-    [Tooltip(""Radius of the sphere cast when useSphereCast is true"")]
+    [Tooltip("Radius of the sphere cast when useSphereCast is true")]
     public float sphereCastRadius = 0.5f;
 
-    [Tooltip(""Layers that count as traffic (cars, stop-line colliders, etc.)"")]
+    [Tooltip("Layers that count as traffic (cars, stop-line colliders, etc.)")]
     public LayerMask trafficLayerMask = ~0;
 
-    [Header(""Road Detection"")]
-    [Tooltip(""Layers used to detect roads for closure checks"")]
+    [Header("Road Detection")]
+    [Tooltip("Layers used to detect roads for closure checks")]
     public LayerMask roadLayer;
 
     // Debug / state
@@ -79,12 +75,6 @@ public LayerMask roadLayer;
         // 1) Handle traffic lights and cars
         HandleTraffic();
 
-        if (!agent.pathPending && agent.remainingDistance <= reachDistance)
-        {
-            SetNextDestination();
-        }
-        CheckRoadClosure();
-    }
         // 2) Debug visuals
         DrawDebugRay();
 
@@ -189,7 +179,7 @@ public LayerMask roadLayer;
         // Close enough to the target?
         if (agent.remainingDistance <= destroyDistance)
         {
-            // ""Stopped"" in a practical sense: very low velocity
+            // "Stopped" in a practical sense: very low velocity
             if (agent.velocity.sqrMagnitude < 0.01f)
             {
                 // Notify spawner and destroy this car
@@ -227,19 +217,12 @@ public LayerMask roadLayer;
 
     private void OnTriggerEnter(Collider other)
     {
-        if (!other.CompareTag(""Intersection""))
+        if (!other.CompareTag("Intersection"))
             return;
 
         ChooseTurnTowardTarget();
     }
-void CheckRoadClosure()
-{
-    Ray ray = new Ray(transform.position + Vector3.up * 0.5f, transform.forward);
 
-    if (Physics.Raycast(ray, out RaycastHit hit, 10f, roadLayer))
-    {
-        if (!isEmergencyVehicle &&
-            RoadClosureManager.Instance.IsRoadClosed(hit.collider))
     private void ChooseTurnTowardTarget()
     {
         if (agent == null || targetBuilding == null)
@@ -274,60 +257,9 @@ void CheckRoadClosure()
 
         if (NavMesh.SamplePosition(probe, out NavMeshHit hit, 20f, NavMesh.AllAreas))
         {
-            agent.ResetPath();
-            ChooseTurnTowardTarget();
+            agent.SetDestination(hit.position);
         }
     }
-}
-
-    void ChooseTurnTowardTarget()
-{
-    if (targetBuilding == null)
-        return;
-
-    Vector3 toTarget = (targetBuilding.position - transform.position).normalized;
-
-    Vector3 forward = transform.forward;
-    Vector3 left = Quaternion.Euler(0, -90f, 0) * forward;
-    Vector3 right = Quaternion.Euler(0, 90f, 0) * forward;
-
-    Vector3[] options = { forward, left, right };
-
-    float bestScore = -999f;
-    Vector3 bestDirection = forward;
-
-    foreach (var dir in options)
-    {
-        if (!IsValidDirection(dir))
-            continue;
-
-        float score = Vector3.Dot(dir.normalized, toTarget);
-
-        if (score > bestScore)
-        {
-            bestScore = score;
-            bestDirection = dir;
-        }
-    }
-
-    Vector3 probe = transform.position + bestDirection.normalized * 40f;
-
-    if (NavMesh.SamplePosition(probe, out NavMeshHit hit, 20f, NavMesh.AllAreas))
-    {
-        agent.SetDestination(hit.position);
-    }
-}
-
-bool IsValidDirection(Vector3 direction)
-{
-    float dot = Vector3.Dot(transform.forward, direction.normalized);
-
-    // 🚫 block reverse or extreme side angle
-    if (dot < 0.2f)
-        return false;
-
-    return true;
-}
 
     private bool IsValidDirection(Vector3 direction)
     {
@@ -400,7 +332,7 @@ bool IsValidDirection(Vector3 direction)
             }
 
             // 2) If the light doesn't block us, check for a car
-            if (!shouldStop && hit.collider.CompareTag(""Car"") && distance < stopDistance)
+            if (!shouldStop && hit.collider.CompareTag("Car") && distance < stopDistance)
             {
                 shouldStop = true;
                 stoppedByCar = true;
@@ -492,4 +424,4 @@ bool IsValidDirection(Vector3 direction)
     }
 
     #endregion
-}"
+}
