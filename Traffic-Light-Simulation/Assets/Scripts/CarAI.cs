@@ -1,100 +1,114 @@
 using UnityEngine;
 using UnityEngine.AI;
-using System.Collections.Generic;
 
 public class CarAI : MonoBehaviour
 {
-    [Header("Navigation")]
-    public float reachDistance = 0.5f;       // Distance to consider "reached" a node
-    public float laneOffset = 1.5f;          // Offset for lane
-
-    private LaneNode currentNode;
     private NavMeshAgent agent;
+    private Transform targetBuilding;
 
-    private int laneIndex = 0;               // Lane offset index
+    [Header("Driving")]
+    public float reachDistance = 3f;
+
+    [Header("Traffic")]
+    public float detectionDistance = 8f;
+    public float stopDistance = 3f;
+
+    private bool stopped = false;
 
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
-        agent.autoBraking = true;
-        agent.updateRotation = true;
-        agent.updatePosition = true;
     }
 
-    /// <summary>
-    /// Initialize the car at a Start node
-    /// </summary>
-    public void Initialize(LaneNode startNode)
+    public void SetBuildingDestination(Transform destination)
     {
-        if (startNode == null || startNode.nextNodes.Count == 0)
-        {
-            Debug.LogWarning($"{name} initialized at invalid node!");
-            return;
-        }
-
-        currentNode = startNode;
-        laneIndex = startNode.laneIndex;
-
-        // Offset spawn along lane
-        Vector3 spawnPos = startNode.transform.position + startNode.transform.right * laneOffset * laneIndex;
-        transform.position = spawnPos;
-
-        MoveToCurrentNode();
-
-        Debug.Log($"{name} initialized at {currentNode.name}, lane {laneIndex}");
+        targetBuilding = destination;
+        SetNextDestination();
     }
 
     void Update()
     {
-        if (agent == null || !agent.isOnNavMesh) return;
+        if (!agent.isOnNavMesh || targetBuilding == null)
+            return;
 
-        // Check if agent has reached destination
+        HandleTraffic();
+
         if (!agent.pathPending && agent.remainingDistance <= reachDistance)
         {
-            AdvanceNode();
+            SetNextDestination();
         }
     }
 
-    /// <summary>
-    /// Move the agent to the current node
-    /// </summary>
-    void MoveToCurrentNode()
+    void SetNextDestination()
     {
-        if (currentNode == null || agent == null || !agent.isOnNavMesh) return;
-
-        // Add lane offset
-        Vector3 targetPos = currentNode.transform.position + currentNode.transform.right * laneOffset * laneIndex;
-
-        agent.SetDestination(targetPos);
-
-        // Rotate the car to face the road
-        if (currentNode.nextNodes.Count > 0)
-        {
-            Vector3 forward = (currentNode.nextNodes[0].transform.position - targetPos).normalized;
-            if (forward != Vector3.zero)
-                transform.rotation = Quaternion.LookRotation(forward, Vector3.up);
-        }
-
-        Debug.DrawLine(transform.position, targetPos, Color.red, 0.1f);
-    }
-
-    /// <summary>
-    /// Advance to the next node in the network
-    /// </summary>
-    void AdvanceNode()
-    {
-        if (currentNode == null) return;
-
-        if (currentNode.nextNodes.Count == 0)
-        {
-            Debug.LogWarning($"{name} reached node {currentNode.name} but has no next nodes!");
+        if (targetBuilding == null)
             return;
+
+        Vector3 targetPosition = targetBuilding.position;
+
+        if (NavMesh.SamplePosition(targetPosition, out NavMeshHit hit, 30f, NavMesh.AllAreas))
+        {
+            agent.SetDestination(hit.position);
+        }
+    }
+
+    void OnTriggerEnter(Collider other)
+    {
+        if (!other.CompareTag("Intersection"))
+            return;
+
+        ChooseTurnTowardTarget();
+    }
+
+    void ChooseTurnTowardTarget()
+    {
+        if (targetBuilding == null)
+            return;
+
+        Vector3 toTarget = (targetBuilding.position - transform.position).normalized;
+
+        Vector3 forward = transform.forward;
+        Vector3 left = Quaternion.Euler(0, -90f, 0) * forward;
+        Vector3 right = Quaternion.Euler(0, 90f, 0) * forward;
+
+        float fDot = Vector3.Dot(forward, toTarget);
+        float lDot = Vector3.Dot(left, toTarget);
+        float rDot = Vector3.Dot(right, toTarget);
+
+        Vector3 chosen = forward;
+
+        if (lDot > fDot && lDot > rDot)
+            chosen = left;
+        else if (rDot > fDot && rDot > lDot)
+            chosen = right;
+
+        Vector3 newTarget = transform.position + chosen * 40f;
+
+        if (NavMesh.SamplePosition(newTarget, out NavMeshHit hit, 20f, NavMesh.AllAreas))
+        {
+            agent.SetDestination(hit.position);
+        }
+    }
+
+    void HandleTraffic()
+    {
+        Ray ray = new Ray(transform.position + Vector3.up * 0.5f, transform.forward);
+        RaycastHit hit;
+
+        if (Physics.Raycast(ray, out hit, detectionDistance))
+        {
+            if (hit.collider.CompareTag("Car") && hit.distance < stopDistance)
+            {
+                agent.isStopped = true;
+                stopped = true;
+                return;
+            }
         }
 
-        // Randomly pick a next node (or pick first for lane-following)
-        currentNode = currentNode.nextNodes[Random.Range(0, currentNode.nextNodes.Count)];
-
-        MoveToCurrentNode();
-        Debug.Log($"{name} advancing to {currentNode.name}");
+        if (stopped)
+        {
+            agent.isStopped = false;
+            stopped = false;
+        }
     }
 }

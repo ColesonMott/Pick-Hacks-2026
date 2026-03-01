@@ -120,7 +120,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ff8f1e8a9ce60ec47ad366019eec8522, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  forwardDistance: 40
   reachDistance: 2
+  roadCheckDistance: 20
+  roadLayer:
+    serializedVersion: 2
+    m_Bits: 64
   detectionDistance: 5
   stopDistance: 4
 --- !u!195 &960308402865219692

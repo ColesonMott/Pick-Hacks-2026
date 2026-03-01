@@ -7,8 +7,6 @@ public class BuildingManager : MonoBehaviour
 
     void Awake()
     {
-        buildingEntrances.Clear();
-
         GameObject[] buildings = GameObject.FindGameObjectsWithTag("Building");
 
         foreach (GameObject b in buildings)
@@ -16,6 +14,6 @@ public class BuildingManager : MonoBehaviour
             buildingEntrances.Add(b.transform);
         }
 
-        Debug.Log("Building entrances registered: " + buildingEntrances.Count);
+        Debug.Log("Registered Buildings: " + buildingEntrances.Count);
     }
 }
