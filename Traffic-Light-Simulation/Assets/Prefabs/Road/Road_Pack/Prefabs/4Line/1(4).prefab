@@ -157,8 +157,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 35e95dc5ff2b64380880dd7ac5922847, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Size: {x: 19.983475, y: 3, z: 6.13313}
-  m_Center: {x: 0.004468918, y: 1, z: -3.8283954}
+  m_Size: {x: 19.983475, y: 3, z: 6.2213764}
+  m_Center: {x: 0.004468918, y: 1, z: -3.7842722}
   m_Area: 6
   m_AffectedAgents: ffffffff
 --- !u!114 &92174498788670061
@@ -173,8 +173,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 35e95dc5ff2b64380880dd7ac5922847, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Size: {x: 20.029045, y: 3, z: 6.028792}
-  m_Center: {x: -0.01578331, y: 1, z: 4.0235124}
+  m_Size: {x: 20.029045, y: 3, z: 6.309515}
+  m_Center: {x: -0.01578331, y: 1, z: 3.883151}
   m_Area: 7
   m_AffectedAgents: ffffffff
 --- !u!114 &1464294904460834939
