@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Car
   - Building
+  - Intersection
   layers:
   - Default
   - TransparentFX

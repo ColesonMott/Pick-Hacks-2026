@@ -1,305 +1,114 @@
 using UnityEngine;
 using UnityEngine.AI;
-using System.Collections.Generic;
 
 public class CarAI : MonoBehaviour
 {
-    private CarSpawner spawner;
-    private LaneNode currentNode;
     private NavMeshAgent agent;
-    private Queue<LaneNode> currentPath = new Queue<LaneNode>();
+    private Transform targetBuilding;
 
     [Header("Driving")]
-    public float reachDistance = 1.5f;
+    public float reachDistance = 3f;
 
     [Header("Traffic")]
-    public float detectionDistance = 12f;
-    public float stopDistance = 5f;
+    public float detectionDistance = 8f;
+    public float stopDistance = 3f;
 
-    [Header("Destination Settings")]
-    public float destinationSampleHeight = 10f;
-    public float destinationSampleRadius = 75f;
-    public float destinationArrivalDistance = 3f;
+    private bool stopped = false;
 
-    private bool isStopped = false;
-    private Transform finalDestination;
-    private Vector3 snappedDestination;
-    private bool hasFinalDestination = false;
-
-    public int allowedLaneArea;
-private bool nodeLocked = false;
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
-
-        agent.autoBraking = true;
-        agent.updateRotation = true;
-        agent.updatePosition = true;
     }
-List<LaneNode> FindPath(LaneNode start, LaneNode goal)
-{
-    Queue<LaneNode> queue = new Queue<LaneNode>();
-    Dictionary<LaneNode, LaneNode> cameFrom = new Dictionary<LaneNode, LaneNode>();
-
-    queue.Enqueue(start);
-    cameFrom[start] = null;
-
-    while (queue.Count > 0)
-    {
-        LaneNode current = queue.Dequeue();
-
-        if (current == goal)
-            break;
-
-        foreach (LaneNode next in current.nextNodes)
-        {
-            if (!cameFrom.ContainsKey(next))
-            {
-                queue.Enqueue(next);
-                cameFrom[next] = current;
-            }
-        }
-    }
-
-    List<LaneNode> path = new List<LaneNode>();
-
-    if (!cameFrom.ContainsKey(goal))
-    {
-        Debug.LogWarning("No path found.");
-        return path;
-    }
-
-    LaneNode step = goal;
-
-    while (step != null)
-    {
-        path.Insert(0, step);
-        step = cameFrom[step];
-    }
-
-    return path;
-}
-LaneNode FindClosestNodeToPosition(Vector3 pos)
-{
-    LaneNode[] nodes = FindObjectsOfType<LaneNode>();
-
-    LaneNode best = null;
-    float bestDist = Mathf.Infinity;
-
-    foreach (LaneNode node in nodes)
-    {
-        float dist = Vector3.Distance(pos, node.transform.position);
-        if (dist < bestDist)
-        {
-            bestDist = dist;
-            best = node;
-        }
-    }
-
-    return best;
-}
-    public void Initialize(LaneNode startNode, CarSpawner ownerSpawner)
-    {
-        spawner = ownerSpawner;
-        currentNode = startNode;
-
-        MoveToCurrentNode();
-    }
-
-    void Update()
-{
-    if (agent == null || !agent.isOnNavMesh)
-        return;
-
-    HandleTraffic();
-
-    if (currentNode == null)
-        return;
-
-    if (!agent.pathPending)
-    {
-        float dist = Vector3.Distance(
-            transform.position,
-            currentNode.transform.position
-        );
-
-        // Only trigger once when truly near node
-        if (dist <= reachDistance && !nodeLocked)
-        {
-            nodeLocked = true;
-            AdvanceNode();
-        }
-
-        // Unlock once we move away from node
-        if (dist > reachDistance + 1f)
-        {
-            nodeLocked = false;
-        }
-    }
-}
-
-    // ===== DESTINATION ROUTING =====
 
     public void SetBuildingDestination(Transform destination)
     {
-        finalDestination = destination;
+        targetBuilding = destination;
+        SetNextDestination();
+    }
 
-        Vector3 searchPosition =
-            destination.position + Vector3.up * destinationSampleHeight;
-
-        if (!NavMesh.SamplePosition(
-            searchPosition,
-            out NavMeshHit hit,
-            destinationSampleRadius,
-            NavMesh.AllAreas))
-        {
-            Debug.LogWarning("No NavMesh found near destination.");
-            return;
-        }
-
-        snappedDestination = hit.position;
-
-        if (!agent.isOnNavMesh)
+    void Update()
+    {
+        if (!agent.isOnNavMesh || targetBuilding == null)
             return;
 
-        NavMeshPath testPath = new NavMeshPath();
-        agent.CalculatePath(snappedDestination, testPath);
+        HandleTraffic();
 
-        if (testPath.status == NavMeshPathStatus.PathComplete)
+        if (!agent.pathPending && agent.remainingDistance <= reachDistance)
         {
-            hasFinalDestination = true;
-            agent.SetDestination(snappedDestination);
-        }
-        else
-        {
-            Debug.LogWarning("Invalid path to destination.");
+            SetNextDestination();
         }
     }
 
-    // ===== LANE MOVEMENT =====
-
-    void MoveToCurrentNode()
+    void SetNextDestination()
     {
-        if (currentNode != null && agent.isOnNavMesh)
-        {
-            agent.SetDestination(currentNode.transform.position);
-        }
-    }
-
-void AdvanceNode()
-{
-    if (currentNode == null)
-        return;
-
-    // ===== START → MUST GO TO END (same lane only)
-    if (currentNode.nodeType == LaneNode.NodeType.Start)
-    {
-        LaneNode[] siblings =
-            currentNode.transform.parent.GetComponentsInChildren<LaneNode>();
-
-        foreach (LaneNode node in siblings)
-        {
-            if (node.nodeType == LaneNode.NodeType.End)
-            {
-                currentNode = node;
-                MoveToCurrentNode();
-                return;
-            }
-        }
-
-        Debug.LogError("START had no END sibling.");
-        return;
-    }
-
-    // ===== END → ONLY ALLOW FORWARD-FACING START NODES
-    if (currentNode.nodeType == LaneNode.NodeType.End)
-    {
-        LaneNode chosen = null;
-        float bestForwardDistance = Mathf.Infinity;
-
-        foreach (LaneNode node in currentNode.nextNodes)
-        {
-            // MUST be Start
-            if (node.nodeType != LaneNode.NodeType.Start)
-                continue;
-
-            Vector3 toNode =
-                node.transform.position - currentNode.transform.position;
-
-            Vector3 dirToNode = toNode.normalized;
-
-            // MUST be physically in front
-            float forwardDot =
-                Vector3.Dot(currentNode.transform.forward, dirToNode);
-
-            if (forwardDot < 0.5f)
-                continue;
-
-            // MUST face same direction (no opposite lane entry)
-            float laneAlignment =
-                Vector3.Dot(currentNode.transform.forward,
-                            node.transform.forward);
-
-            if (laneAlignment <= 0f)
-                continue;
-
-            float forwardDistance =
-                Vector3.Dot(currentNode.transform.forward, toNode);
-
-            if (forwardDistance > 0 &&
-                forwardDistance < bestForwardDistance)
-            {
-                bestForwardDistance = forwardDistance;
-                chosen = node;
-            }
-        }
-
-        if (chosen == null)
-        {
-            Debug.LogWarning("No legal forward lane found.");
+        if (targetBuilding == null)
             return;
+
+        Vector3 targetPosition = targetBuilding.position;
+
+        if (NavMesh.SamplePosition(targetPosition, out NavMeshHit hit, 30f, NavMesh.AllAreas))
+        {
+            agent.SetDestination(hit.position);
         }
-
-        currentNode = chosen;
-        MoveToCurrentNode();
     }
-}
 
-    // ===== TRAFFIC DETECTION =====
+    void OnTriggerEnter(Collider other)
+    {
+        if (!other.CompareTag("Intersection"))
+            return;
+
+        ChooseTurnTowardTarget();
+    }
+
+    void ChooseTurnTowardTarget()
+    {
+        if (targetBuilding == null)
+            return;
+
+        Vector3 toTarget = (targetBuilding.position - transform.position).normalized;
+
+        Vector3 forward = transform.forward;
+        Vector3 left = Quaternion.Euler(0, -90f, 0) * forward;
+        Vector3 right = Quaternion.Euler(0, 90f, 0) * forward;
+
+        float fDot = Vector3.Dot(forward, toTarget);
+        float lDot = Vector3.Dot(left, toTarget);
+        float rDot = Vector3.Dot(right, toTarget);
+
+        Vector3 chosen = forward;
+
+        if (lDot > fDot && lDot > rDot)
+            chosen = left;
+        else if (rDot > fDot && rDot > lDot)
+            chosen = right;
+
+        Vector3 newTarget = transform.position + chosen * 40f;
+
+        if (NavMesh.SamplePosition(newTarget, out NavMeshHit hit, 20f, NavMesh.AllAreas))
+        {
+            agent.SetDestination(hit.position);
+        }
+    }
 
     void HandleTraffic()
     {
-        Ray ray = new Ray(
-            transform.position + Vector3.up * 0.5f,
-            transform.forward);
-
+        Ray ray = new Ray(transform.position + Vector3.up * 0.5f, transform.forward);
         RaycastHit hit;
 
         if (Physics.Raycast(ray, out hit, detectionDistance))
         {
-            if (hit.collider.CompareTag("Car") &&
-                hit.distance < stopDistance)
+            if (hit.collider.CompareTag("Car") && hit.distance < stopDistance)
             {
                 agent.isStopped = true;
-                isStopped = true;
+                stopped = true;
                 return;
             }
         }
 
-        if (isStopped)
+        if (stopped)
         {
             agent.isStopped = false;
-            isStopped = false;
+            stopped = false;
         }
-    }
-
-    // ===== DESPAWN =====
-
-    void Despawn()
-    {
-        if (spawner != null)
-            spawner.NotifyCarDestroyed();
-
-        Destroy(gameObject);
     }
 }
