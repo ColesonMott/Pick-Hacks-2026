@@ -1,23 +1,43 @@
 using UnityEngine;
 
-public enum ResponderType { Ambulance, Police, Fire, Other }
+public enum ResponderType
+{
+    Ambulance,
+    Fire,
+    Police,
+    Other
+}
 
 public class FirstResponderVehicle : MonoBehaviour
 {
+    [Header("Responder Identity")]
     public string displayName = "Unit";
-    public ResponderType type = ResponderType.Other;
+    public ResponderType type = ResponderType.Ambulance;
 
-    void OnEnable() => TryRegister();
+    [Header("Optional status text for UI")]
+    [TextArea]
+    public string status;
 
-    void Start() => TryRegister(); // fallback if OnEnable ran before registry existed
-
-    void OnDisable()
+    private void OnEnable()
     {
-        ResponderRegistry.Instance?.Unregister(this);
+        // Register with the global registry when spawned/enabled
+        if (ResponderRegistry.Instance != null)
+            ResponderRegistry.Instance.Register(this);
     }
 
-    void TryRegister()
+    private void OnDisable()
     {
-        ResponderRegistry.Instance?.Register(this);
+        // Unregister when destroyed/disabled
+        if (ResponderRegistry.Instance != null)
+            ResponderRegistry.Instance.Unregister(this);
+    }
+
+    /// <summary>
+    /// Call this when name/status changes and you want UI to refresh.
+    /// </summary>
+    public void NotifyChanged()
+    {
+        if (ResponderRegistry.Instance != null)
+            ResponderRegistry.Instance.NotifyChanged(this);
     }
 }

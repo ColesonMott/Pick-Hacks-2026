@@ -71,6 +71,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isEmergencyVehicle: 0
+  freezeTimeout: 45
   reachDistance: 2
   destroyDistance: 2
   rotationSpeed: 8

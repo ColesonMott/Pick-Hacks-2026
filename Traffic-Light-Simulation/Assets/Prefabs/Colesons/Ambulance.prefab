@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 4902179103037811528}
   - component: {fileID: 7821324535266188182}
   - component: {fileID: 4707833494937535959}
+  - component: {fileID: 974334025600061994}
   m_Layer: 0
   m_Name: Ambulance
   m_TagString: Car
@@ -84,6 +85,21 @@ MonoBehaviour:
   activationDistance: 50
   emergencyHoldTime: 5
   logDebug: 0
+--- !u!114 &974334025600061994
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4858917271281749744}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b889bd000dc991408253adbdeb43876, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  displayName: Unit
+  type: 0
+  status: 
 --- !u!1001 &4094392589434368543
 PrefabInstance:
   m_ObjectHideFlags: 0
