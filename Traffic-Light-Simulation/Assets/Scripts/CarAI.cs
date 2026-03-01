@@ -3,6 +3,7 @@ using UnityEngine.AI;
 
 public class CarAI : MonoBehaviour
 {
+    public bool isEmergencyVehicle = false;
     private NavMeshAgent agent;
     private Transform targetBuilding;
 
@@ -14,6 +15,8 @@ public class CarAI : MonoBehaviour
     public float stopDistance = 3f;
 
     private bool stopped = false;
+    [Header("Road Detection")]
+public LayerMask roadLayer;
 
     void Awake()
     {
@@ -37,6 +40,7 @@ public class CarAI : MonoBehaviour
         {
             SetNextDestination();
         }
+        CheckRoadClosure();
     }
 
     void SetNextDestination()
@@ -59,6 +63,20 @@ public class CarAI : MonoBehaviour
 
         ChooseTurnTowardTarget();
     }
+void CheckRoadClosure()
+{
+    Ray ray = new Ray(transform.position + Vector3.up * 0.5f, transform.forward);
+
+    if (Physics.Raycast(ray, out RaycastHit hit, 10f, roadLayer))
+    {
+        if (!isEmergencyVehicle &&
+            RoadClosureManager.Instance.IsRoadClosed(hit.collider))
+        {
+            agent.ResetPath();
+            ChooseTurnTowardTarget();
+        }
+    }
+}
 
     void ChooseTurnTowardTarget()
     {
