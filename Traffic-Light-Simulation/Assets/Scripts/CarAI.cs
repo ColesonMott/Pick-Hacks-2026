@@ -9,6 +9,10 @@ public class CarAI : MonoBehaviour
     private NavMeshAgent agent;
     private Transform targetBuilding;
     private CarSpawner spawner;
+    [Header("Freeze Protection")]
+public float freezeTimeout = 30f;
+
+private float lastMoveTime;
 
     [Header("Driving")]
     [Tooltip("How close to the target building before considering it reached (for picking next destination)")]
@@ -69,6 +73,7 @@ public class CarAI : MonoBehaviour
     {
         // If the spawner didn't assign a destination for some reason,
         // try to pick one ourselves.
+        lastMoveTime = Time.time;
         EnsureHasDestination();
     }
 
@@ -104,10 +109,35 @@ public class CarAI : MonoBehaviour
         }
 
         // 6) Rotation & despawn check
+        CheckFrozen();
         UpdateRotation();
         TryDestroyWhenArrived();
     }
+    private void CheckFrozen()
+{
+    if (agent == null || !agent.isOnNavMesh)
+        return;
 
+    // If moving, update last move time
+    if (agent.velocity.sqrMagnitude > 0.05f)
+    {
+        lastMoveTime = Time.time;
+        return;
+    }
+
+    // If stopped intentionally (traffic), ignore freeze logic
+    if (agent.isStopped)
+        return;
+
+    // If stuck too long, destroy
+    if (Time.time - lastMoveTime > freezeTimeout)
+    {
+        if (spawner != null)
+            spawner.NotifyCarDestroyed();
+
+        Destroy(gameObject);
+    }
+}
     // Make sure we always have a destination/path if possible
     private void EnsureHasDestination()
     {
@@ -337,7 +367,7 @@ public class CarAI : MonoBehaviour
         float dot = Vector3.Dot(transform.forward, direction.normalized);
 
         // Block reverse or extreme side angle
-        if (dot < 0.2f)
+        if (dot < 0.3f)
             return false;
 
         return true;
