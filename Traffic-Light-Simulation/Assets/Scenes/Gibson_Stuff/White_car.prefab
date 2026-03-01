@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 1465044160393814660}
   - component: {fileID: 7055941087748762164}
   - component: {fileID: 7620553283782928337}
+  - component: {fileID: 4977781774104315038}
   m_Layer: 0
   m_Name: White_car
   m_TagString: Car
@@ -69,6 +70,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ff8f1e8a9ce60ec47ad366019eec8522, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isEmergencyVehicle: 0
   reachDistance: 2
   destroyDistance: 2
   rotationSpeed: 8
@@ -80,6 +82,10 @@ MonoBehaviour:
   trafficLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  roadLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  logDestinationDebug: 0
 --- !u!114 &7620553283782928337
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -93,6 +99,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   steeringSmoothness: 6
+--- !u!65 &4977781774104315038
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 675249978529913273}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1.4673991, z: 3.001438}
+  m_Center: {x: 0, y: 0.837857, z: 1.0007204}
 --- !u!1001 &6583895877715687301
 PrefabInstance:
   m_ObjectHideFlags: 0
