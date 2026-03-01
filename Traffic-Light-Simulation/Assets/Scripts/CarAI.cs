@@ -43,6 +43,9 @@ public class CarAI : MonoBehaviour
     [Tooltip("Layers used to detect roads for closure checks")]
     public LayerMask roadLayer;
 
+    [Header("Debug")]
+    public bool logDestinationDebug = false;
+
     // Debug / state
     private bool stoppedByCar = false;
     private bool stoppedByLight = false;
@@ -64,13 +67,18 @@ public class CarAI : MonoBehaviour
 
     private void Start()
     {
-        // CarSpawner will normally call SetBuildingDestination().
+        // If the spawner didn't assign a destination for some reason,
+        // try to pick one ourselves.
+        EnsureHasDestination();
     }
 
     private void Update()
     {
         if (agent == null || !agent.enabled)
             return;
+
+        // Make sure we always have *some* valid destination
+        EnsureHasDestination();
 
         // 1) Handle traffic lights and cars
         HandleTraffic();
@@ -98,6 +106,47 @@ public class CarAI : MonoBehaviour
         // 6) Rotation & despawn check
         UpdateRotation();
         TryDestroyWhenArrived();
+    }
+
+    // Make sure we always have a destination/path if possible
+    private void EnsureHasDestination()
+    {
+        if (agent == null)
+            return;
+
+        // If we already have a path, we're good.
+        if (agent.hasPath && !agent.pathPending)
+            return;
+
+        // If targetBuilding was never set, try to pick one from BuildingManager.
+        if (targetBuilding == null)
+        {
+            if (BuildingManager.buildingEntrances != null &&
+                BuildingManager.buildingEntrances.Count > 0)
+            {
+                int index = Random.Range(0, BuildingManager.buildingEntrances.Count);
+                targetBuilding = BuildingManager.buildingEntrances[index];
+
+                if (logDestinationDebug)
+                    Debug.Log($"[CarAI] {name}: Auto-picked initial building: {targetBuilding.name}");
+            }
+            else
+            {
+                if (logDestinationDebug)
+                    Debug.LogWarning($"[CarAI] {name}: No building entrances available to pick a destination.");
+                return;
+            }
+        }
+
+        // If we reach here and still don't have a path, set destination again.
+        if (agent.isOnNavMesh)
+        {
+            agent.isStopped = false;
+            agent.SetDestination(targetBuilding.position);
+
+            if (logDestinationDebug)
+                Debug.Log($"[CarAI] {name}: Ensured destination set to {targetBuilding.position}");
+        }
     }
 
     #region DESTINATION / NAVIGATION
@@ -128,6 +177,9 @@ public class CarAI : MonoBehaviour
                     agent.SetDestination(targetBuilding.position);
             }
         }
+
+        if (logDestinationDebug)
+            Debug.Log($"[CarAI] {name}: SetBuildingDestination called, target = {targetBuilding.name}");
     }
 
     /// <summary>
@@ -138,6 +190,8 @@ public class CarAI : MonoBehaviour
         if (BuildingManager.buildingEntrances == null ||
             BuildingManager.buildingEntrances.Count == 0)
         {
+            if (logDestinationDebug)
+                Debug.LogWarning($"[CarAI] {name}: No building entrances available for PickRandomBuildingDestination.");
             return;
         }
 
@@ -158,7 +212,10 @@ public class CarAI : MonoBehaviour
             }
         }
 
-        SetBuildingDestination(newTarget);
+        if (newTarget != null)
+        {
+            SetBuildingDestination(newTarget);
+        }
     }
 
     #endregion
@@ -187,6 +244,9 @@ public class CarAI : MonoBehaviour
                 {
                     spawner.NotifyCarDestroyed();
                 }
+
+                if (logDestinationDebug)
+                    Debug.Log($"[CarAI] {name}: Arrived and despawning.");
 
                 Destroy(gameObject);
             }
@@ -225,8 +285,16 @@ public class CarAI : MonoBehaviour
 
     private void ChooseTurnTowardTarget()
     {
-        if (agent == null || targetBuilding == null)
+        if (agent == null)
             return;
+
+        // If we somehow lost our target building, try to pick one.
+        if (targetBuilding == null)
+        {
+            EnsureHasDestination();
+            if (targetBuilding == null)
+                return;
+        }
 
         Vector3 toTarget = (targetBuilding.position - transform.position).normalized;
 
@@ -258,6 +326,9 @@ public class CarAI : MonoBehaviour
         if (NavMesh.SamplePosition(probe, out NavMeshHit hit, 20f, NavMesh.AllAreas))
         {
             agent.SetDestination(hit.position);
+
+            if (logDestinationDebug)
+                Debug.Log($"[CarAI] {name}: ChooseTurnTowardTarget set destination to {hit.position}");
         }
     }
 
