@@ -9,7 +9,18 @@ public class LaneNode : MonoBehaviour
         End
     }
 
+    public enum TurnType
+    {
+        Straight,
+        Left,
+        Right
+    }
+
+    [Header("Node Type")]
     public NodeType nodeType;
 
+    [Header("Connections")]
     public List<LaneNode> nextNodes = new List<LaneNode>();
+
+
 }

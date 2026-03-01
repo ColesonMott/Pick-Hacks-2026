@@ -4,6 +4,12 @@ public class LaneNetworkBuilder : MonoBehaviour
 {
     public float forwardCheckDistance = 8f;
 
+    [Header("Direction Rules")]
+    public float minForwardDot = 0.3f;     // Must be somewhat in front
+    public float oppositeDotThreshold = -0.3f; // Block opposite lanes
+    public float minTurnAngle = 60f;       // Allow turns
+    public float maxTurnAngle = 120f;
+
     void Start()
     {
         BuildNetwork();
@@ -28,6 +34,7 @@ public class LaneNetworkBuilder : MonoBehaviour
 
         foreach (LaneNode startNode in nodes)
         {
+            // 🔥 HARD RULE: Only End → Start allowed
             if (startNode.nodeType != LaneNode.NodeType.Start)
                 continue;
 
@@ -35,11 +42,20 @@ public class LaneNetworkBuilder : MonoBehaviour
                 continue;
 
             Vector3 toStart = startNode.transform.position - endNode.transform.position;
+            Vector3 dirToStart = toStart.normalized;
 
-            float forwardDot = Vector3.Dot(endNode.transform.forward, toStart.normalized);
+            float forwardDot = Vector3.Dot(endNode.transform.forward, dirToStart);
 
-            // Must be roughly in front
-            if (forwardDot < 0.3f)
+            if (forwardDot < 0.4f)
+                continue;
+
+            float laneAlignment = Vector3.Dot(
+                endNode.transform.forward,
+                startNode.transform.forward
+            );
+
+            // 🚫 BLOCK opposite lanes completely
+            if (laneAlignment < 0f)
                 continue;
 
             float forwardDistance = Vector3.Dot(endNode.transform.forward, toStart);
