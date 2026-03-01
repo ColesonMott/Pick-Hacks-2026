@@ -7,15 +7,17 @@ public class FirstResponderVehicle : MonoBehaviour
     public string displayName = "Unit";
     public ResponderType type = ResponderType.Other;
 
-    void OnEnable()
-    {
-        if (ResponderRegistry.Instance != null)
-            ResponderRegistry.Instance.Register(this);
-    }
+    void OnEnable() => TryRegister();
+
+    void Start() => TryRegister(); // fallback if OnEnable ran before registry existed
 
     void OnDisable()
     {
-        if (ResponderRegistry.Instance != null)
-            ResponderRegistry.Instance.Unregister(this);
+        ResponderRegistry.Instance?.Unregister(this);
+    }
+
+    void TryRegister()
+    {
+        ResponderRegistry.Instance?.Register(this);
     }
 }
