@@ -16,8 +16,7 @@ public class EnsureEventSystem : MonoBehaviour
         // If you are using the OLD input system, add this:
         go.AddComponent<StandaloneInputModule>();
 
-        // If you are using the NEW input system, use this instead:
-        // go.AddComponent<InputSystemUIInputModule>();
+
 
         DontDestroyOnLoad(go);
     }
